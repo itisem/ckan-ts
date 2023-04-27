@@ -4,6 +4,7 @@ import parseGroup from "./parsers/group";
 import parseLicense from "./parsers/license";
 import parseOrganization from "./parsers/organization";
 import parsePackage from "./parsers/package";
+import parseResource from "./parsers/resource";
 import parseTag from "./parsers/tag";
 import parseUser from "./parsers/user";
 
@@ -11,7 +12,7 @@ import type {
 	Settings, AllowedMethods, GenericResponse,
 	GroupOptions, LimitOptions, OrganizationOptions, SortOptions, TagOptions, UserOptions,
 	Group, License, Organization, Package, Resource, Tag, User,
-	RawGroup, RawLicense, RawOrganization, RawPackage, RawTag, RawUser,
+	RawGroup, RawLicense, RawOrganization, RawPackage, RawResource, RawTag, RawUser,
 } from "./types";
 
 /**
@@ -117,6 +118,15 @@ export default class CKAN{
 		return this.action("site_read");
 	}
 
+	/** Gets the details of a data set from the API.
+	 * @param {string} id
+	 * @returns {Promise<Package>}
+	 */
+	async dataset(id: string): Promise<Package>{
+		const result: RawPackage = await this.action("package_show", {id, "use_default_schema": true});
+		return parsePackage(result);
+	}
+
 	/** Gets the API's package list.
 	 * @param {LimitOptions?} [limit]
 	 * @returns {Promise<string[]>}
@@ -193,6 +203,15 @@ export default class CKAN{
 		};
 		const results: RawOrganization[] = await this.action("organization_list", settings);
 		return results.map(x => parseOrganization(x));
+	}
+
+	/** Gets the details of a resource from the API.
+	 * @param {string} id
+	 * @returns {Promise<Resource>}
+	 */
+	async resource(id: string): Promise<Resource>{
+		const result: RawResource = await this.action("resource_show", {id, "use_default_schema": true});
+		return parseResource(result);
 	}
 
 	/** Gets the API's tag list.
