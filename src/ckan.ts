@@ -13,7 +13,7 @@ export default class CKAN{
 	/**
 	 * @constructor
 	 * @param {string} baseUrl - The url for the CKAN API endpoint.
-	 * @param {CKANSettings} [options={}] - Base settings for CKAN
+	 * @param {CKANTypes.CKANSettings} [options={}] - Base settings for CKAN
 	 * @param {}
 	 */
 	constructor(baseUrl: string, options: CKANTypes.Settings = {}){
@@ -48,12 +48,227 @@ export default class CKAN{
 		}
 	}
 
+	/** Processes a date
+	 * @private
+	 * @param {string} [date]
+	 * @returns {Date|undefined}
+	 */
+	private processDate(date?: string){
+		return date ? new Date(date) : undefined;
+	}
+
 	/**
-	 * Carries out a generic CKAN action. Should generally be avoided in favour of specific functions.
+	 * Processes the extras field
+	 * @private
+	 * @param {CKANTypes.RawExtra[]} [extras]
+	 * @returns {CKANTypes.StringIndexedObject: any}
+	 */
+	private processExtras(extras?: CKANTypes.RawExtra[]): CKANTypes.StringIndexedObject{
+		if(!extras) return [];
+		let obj: CKANTypes.StringIndexedObject = {};
+		for(let extra of extras){
+			obj[extra.key] = extra.value;
+		}
+		return obj;
+	}
+
+	/** Processes a group
+	 * @private
+	 * @param {CKANTypes.RawGroup} group
+	 * @returns {CKANTypes.Group}
+	 */
+	private processGroup(group: CKANTypes.RawGroup): CKANTypes.Group{
+		const {description, display_name, id, image_display_url, name, title, ...rest} = group;
+		return {
+			description: description ?? "",
+			displayName: display_name ?? "",
+			id,
+			imageUrl: image_display_url,
+			name: name ?? "",
+			title: title ?? "",
+			additionalData: rest
+		};
+	}
+
+	/** Ensures that the language is an array at all times
+	 * @private
+	 * @param {string | string[]} [language]
+	 * @returns {string[]}
+	 */
+	private processLanguages(language?: string | string[]): string[]{
+		return language ? (Array.isArray(language) ? language : [language]) : undefined;
+	}
+
+	/**
+	 * Processes an organization into consistent, parsed outputs.
+	 * @private
+	 * @param {CKANTypes.RawOrganization} [organization]
+	 * @returns {CKANTypes.Organization}
+	 */
+	private processOrganization(organization: CKANTypes.RawOrganization): CKANTypes.Organization{
+		const {
+			approval_status, created, description, id, image_url,
+			is_organization, name, state, title, type,
+			...rest
+		} = organization;
+		return {
+			approvalStatus: approval_status,
+			created: this.processDate(created),
+			description: description ?? "",
+			id,
+			imageUrl: image_url,
+			isOrganization: is_organization ?? true,
+			name: name ?? "",
+			state,
+			title: title ?? "",
+			type,
+			additionalData: rest
+		};
+	}
+
+	/** Processes a resource into consistent, parsed outputs.
+	 * @private
+	 * @param {CKANTypes.RawResource} resource
+	 * @returns {CKANTypes.Resource}
+	 */
+	private processResource(resource: CKANTypes.RawResource): CKANTypes.Resource{
+		const {
+			datastore_active, url_type, cache_url, cache_last_updated, created, description,
+			format, hash, id, language, metadata_created, metadata_modified, metadata_language,
+			mimetype, mimetype_inner, last_modified, name, package_id, position,
+			size, state, url,
+			...rest
+		} = resource;
+		return {
+			access: {
+				active: datastore_active,
+				urlType: url_type
+			},
+			cache: {
+				url: cache_url,
+				updated: this.processDate(cache_last_updated)
+			},
+			created: this.processDate(created),
+			description,
+			format,
+			hash,
+			id,
+			languages: this.processLanguages(language),
+			metadata: {
+				created: this.processDate(metadata_created),
+				modified: this.processDate(metadata_modified),
+				language: metadata_language
+			},
+			mimeType: {
+				resource: mimetype,
+				inner: mimetype_inner
+			},
+			modified: this.processDate(last_modified),
+			name: name ?? "",
+			package: {
+				id: package_id,
+				position
+			},
+			size,
+			state,
+			url: url ?? "",
+			additionalData: rest
+		};
+	}
+
+	/** Processes a tag
+	 * @private
+	 * @param {CKANTypes.RawTag} tag
+	 * @returns {CKANTypes.Tag}
+	 */
+	private processTag(tag: CKANTypes.RawTag): CKANTypes.Tag{
+		const {id, name, display_name, state, vocabulary_id, ...rest} = tag;
+		return {
+			displayName: display_name ?? "",
+			id,
+			name: name ?? "",
+			state,
+			vocabularyId: vocabulary_id,
+			additionalData: rest
+		};
+	}
+
+	/**
+	 * Processes a package into consistent, parsed outputs.
+	 * @private
+	 * @param {CKANTypes.RawPackage} ckanPackage
+	 * @returns {CKANTypes.Package}
+	 */
+	private processPackage(ckanPackage: CKANTypes.RawPackage): CKANTypes.Package{
+		const {
+				author, author_email, issued, creator_user_id, groups, id, language,
+				license_id, license_title, license_url, maintainer, maintainer_email,
+				modified, metadata_created, metadata_modified, metadata_language,
+				name, notes, isopen, organization, resources,
+				relationships_as_object, relationships_as_subject, state,
+				tags, title, type, url, version,
+				extras, ...rest
+			} = ckanPackage;
+			// workaround since "private" can't be destructured due to being a reserved keyword 
+			const isPrivate = rest.private;
+			delete rest.private;
+			// removing unnecessary information - just use .resources.length and .tags.length instead
+			delete rest.num_resources;
+			delete rest.num_tags;
+			delete rest.owner_org;
+			return {
+				author: {
+					name: author,
+					email: author_email
+				},
+				created: this.processDate(issued),
+				creator: {
+					id: creator_user_id
+				},
+				groups: groups ? groups.map(x => this.processGroup(x)) : [],
+				id,
+				languages: this.processLanguages(language),
+				license: {
+					id: license_id,
+					title: license_title,
+					url: license_url
+				},
+				maintainer: {
+					name: maintainer,
+					email: maintainer_email
+				},
+				modified: this.processDate(modified),
+				metadata: {
+					created: this.processDate(metadata_created),
+					modified: this.processDate(metadata_modified),
+					language: metadata_language
+				},
+				name,
+				notes,
+				open: isopen,
+				organization: this.processOrganization(organization),
+				private: isPrivate,
+				resources: resources ? resources.map(x => this.processResource(x)) : [],
+				relationships:{
+					subject: relationships_as_subject,
+					object: relationships_as_object
+				},
+				state,
+				tags: tags ? tags.map(x => this.processTag(x)) : [],
+				title,
+				type,
+				url,
+				version,
+				additionalData: {...rest, ...this.processExtras(extras)}
+			};
+	}
+
+	/**
+	 * Carries out a generic CKAN action. Should generally be avoided in favour of specific functions unless the action has not been implemented.
 	 * @template T
 	 * @template U
 	 * @param {string} action - The API action to use.
-	 * @param {AllowedMethods} [method="GET"] - The HTTP request method to use for this endpoint
+	 * @param {CKANTypes.AllowedMethods} [method="GET"] - The HTTP request method to use for this endpoint
 	 * @param {T} [data] - The data to pass onto the API
 	 * @returns {Promise<U>}
 	 */
@@ -82,18 +297,34 @@ export default class CKAN{
 	 * Checks whether an API is accessible.
 	 * @returns {Promise<boolean>}
 	 */
-	async siteRead(): Promise<boolean>{
+	async available(): Promise<boolean>{
 		return this.action("site_read");
 	}
 
 	/** Gets the API's package list.
 	 * @param {int?} [limit] - The number of resources per page.
 	 * @param {int?} [offset] - The number of resources that should be ignored.
+	 * @returns {Promise<string[]>}
 	 */
-	async getPackageList(limit?: number, offset?: number): Promise<string[]>{
+	async datasets(limit?: number, offset?: number): Promise<string[]>{
 		let data: {limit?: number, offset?: number} = {};
 		if(limit) data.limit = limit;
 		if(offset) data.offset = offset;
 		return this.action("package_list");
+	}
+
+	/** Gets the API's package list with additional information.
+	 * @param {int?} [limit] - The number of resources per page.
+	 * @param {int?} [offset] - The number of resources that should be ignored.
+	 * @returns {Promise<CKANTypes.Package[]>}
+	 */
+	async detailedDatasets(limit?: number, offset?: number): Promise<CKANTypes.Package[]>{
+		let data: {limit?: number, offset?: number} = {};
+		if(limit) data.limit = limit;
+		if(offset) data.offset = offset;
+		const results: CKANTypes.RawPackage[] = await this.action("current_package_list_with_resources");
+		let newResults: CKANTypes.Package[];
+		newResults = results.map(x => this.processPackage(x));
+		return newResults;
 	}
 };

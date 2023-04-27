@@ -18,14 +18,15 @@ describe("setup", () => {
 });
 
 describe("endpoints work as intended", () => {
-	const ckan = new CKAN("https://demo.ckan.org/api/3/action");
+	const parser = new CKAN("https://demo.ckan.org/api/3/action");
 	test("can read site activity", async () => {
-		const isActive = ckan.siteRead();
+		const isActive = parser.available();
 		expect(isActive).resolves.toBe(true);
 	});
 	test("can get package lists", async () => {
-		const baseDetails = await ckan.getPackageList();
-		expect(Array.isArray(baseDetails)).toBe(true);
+		const baseDetails = await parser.datasets();
 		expect(baseDetails.every(x => typeof x === "string"));
-	})
+		const fullDetails = await parser.detailedDatasets();
+		expect(Array.isArray(fullDetails)).toBe(true);
+	});
 });
