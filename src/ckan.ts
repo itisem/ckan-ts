@@ -106,7 +106,7 @@ export default class CKAN{
 	 */
 	private processLicense(license: CKANTypes.RawLicense): CKANTypes.License{
 		const {is_okd_compliant, is_osi_compliant, od_conformance, osd_conformance,
-		domain_content, domain_data, domain_software, family, generic, id, status, title, url
+		domain_content, domain_data, domain_software, family, is_generic, id, status, title, url,
 		...rest} = license;
 		return {
 			compliance: {
@@ -127,7 +127,7 @@ export default class CKAN{
 			id,
 			status,
 			title: title ?? "",
-			url
+			url,
 			additionalData: rest
 		};
 	}

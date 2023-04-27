@@ -254,7 +254,7 @@ export interface RawGroup{
 };
 
 /** Raw License type */
-export interface License{
+export interface RawLicense{
 	domain_content?: boolean;
 	domain_data?: boolean;
 	domain_software?: boolean;
@@ -262,8 +262,8 @@ export interface License{
 	id: string;
 	is_generic?: boolean;
 	maintainer?: string;
-	od_conformace?: string;
-	osd_conformance?: string;
+	od_conformace?: boolean;
+	osd_conformance?: boolean;
 	status?: string;
 	title?: string;
 	url?: string;
