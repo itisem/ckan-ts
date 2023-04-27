@@ -99,6 +99,39 @@ export default class CKAN{
 		return language ? (Array.isArray(language) ? language : [language]) : undefined;
 	}
 
+	/** Processes a raw license
+	 * @private
+	 * @param {CKANTypes.RawLicense} license
+	 * @returns {CKANTypes.License}
+	 */
+	private processLicense(license: CKANTypes.RawLicense): CKANTypes.License{
+		const {is_okd_compliant, is_osi_compliant, od_conformance, osd_conformance,
+		domain_content, domain_data, domain_software, family, generic, id, status, title, url
+		...rest} = license;
+		return {
+			compliance: {
+				okd: is_okd_compliant,
+				osi: is_osi_compliant
+			},
+			conformance: {
+				od: od_conformance,
+				osd: osd_conformance
+			},
+			domain: {
+				content: domain_content,
+				data: domain_data,
+				software: domain_software
+			},
+			family,
+			generic: is_generic,
+			id,
+			status,
+			title: title ?? "",
+			url
+			additionalData: rest
+		};
+	}
+
 	/**
 	 * Processes an organization into consistent, parsed outputs.
 	 * @private
@@ -307,9 +340,7 @@ export default class CKAN{
 	 * @returns {Promise<string[]>}
 	 */
 	async datasets(limit?: number, offset?: number): Promise<string[]>{
-		let data: {limit?: number, offset?: number} = {};
-		if(limit) data.limit = limit;
-		if(offset) data.offset = offset;
+		let data: {limit?: number, offset?: number} = {limit, offset};
 		return this.action("package_list");
 	}
 
@@ -319,12 +350,38 @@ export default class CKAN{
 	 * @returns {Promise<CKANTypes.Package[]>}
 	 */
 	async detailedDatasets(limit?: number, offset?: number): Promise<CKANTypes.Package[]>{
-		let data: {limit?: number, offset?: number} = {};
-		if(limit) data.limit = limit;
-		if(offset) data.offset = offset;
+		let data: {limit?: number, offset?: number} = {limit, offset};
 		const results: CKANTypes.RawPackage[] = await this.action("current_package_list_with_resources");
 		let newResults: CKANTypes.Package[];
 		newResults = results.map(x => this.processPackage(x));
 		return newResults;
+	}
+
+	/** Gets the API's license list.
+	 * @returns {Promise<CKANTypes.License[]>}
+	 */
+	async licenses(): Promise<CKANTypes.License[]>{
+		const results: CKANTypes.RawLicense[] = await this.action("license_list");
+		return results.map(x => this.processLicense(x));
+	}
+
+	/** Gets the API's tag list.
+	 * @param {string} [query] - A search query.
+	 * @param {string} [vocabularyId] - Which vocabulary ID should the tags belong to?
+	 * @returns {Promise<string[]>}
+	 */
+	async tags(query?: string, vocabularyId?: string): Promise<string[]>{
+		let data = {query, vocabulary_id: vocabularyId};
+		return this.action("tag_list");
+	}
+
+	/** Gets the API's tag list with details.
+	 * @param {string} [query] - A search query.
+	 * @param {string} [vocabularyId] - Which vocabulary ID should the tags belong to?
+	 * @returns {Promise<CKANTypes.Tag[]>}
+	 */
+	async detailedTags(query?: string, vocabularyId?: string): Promise<CKANTypes.Tag[]>{
+		let data = {query, vocabulary_id: vocabularyId, all_fields: true};
+		return this.action("tag_list");
 	}
 };

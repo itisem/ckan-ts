@@ -1,5 +1,7 @@
 import type {AxiosRequestConfig} from "axios";
 
+/////// Settings types
+
 /** Settings for the CKAN module */
 export interface Settings{
 	/** Request options to pass along to got. For more info, see the documentation: https://axios-http.com/docs/req_config */
@@ -11,16 +13,7 @@ export interface Settings{
 /** Allowed HTTP request methods */
 export type AllowedMethods = "GET" | "POST" | "PATCH" | "DELETE";
 
-/** Generic CKAN response type */
-export interface GenericResponse<T>{
-	help: string;
-	success: boolean;
-	result?: T;
-	error?: {
-		__type: string;
-		message: string;
-	};
-};
+/////// Parsed output types
 
 /** Group type */
 export interface Group{
@@ -39,6 +32,44 @@ export interface Group{
 	/** Non-standard additional data provided by the API. */
 	additionalData?: StringIndexedObject;
 };
+
+/** License type */
+export interface License{
+	/** The license's compliance with other standards */
+	compliance: {
+		/** Is the license OKD compliant */
+		okd?: boolean;
+		/** Has the licence been approved by the Open Source Initiative */
+		osi?: boolean;
+	};
+	/** The license's conformance with other standards */
+	conformance: {
+		/** Is the license conformant with the Open Definition */
+		od?: boolean;
+		/** Is the license conformant with the Open Source Definition */
+		osd?: boolean;
+	};
+	/** The license's usage on the domain */
+	domain: {
+		content?: boolean;
+		data?: boolean;
+		software?: boolean;
+	};
+	/** The license's id */
+	id: string;
+	/** The license's human-readable title */
+	title: string;
+	/** Which family of licenses this license belongs to */
+	family?: string;
+	/** Is the license generic? */
+	generic?: boolean;
+	/** The license's status */
+	status?: string;
+	/** The license's URL */
+	url?: string;
+	/** Non-standard additional data provided by the API. */
+	additionalData?: StringIndexedObject;
+}
 
 /** Organization CKAN type */
 export interface Organization{
@@ -201,7 +232,7 @@ export interface Tag{
 	vocabularyId?: string;
 	/** Non-standard additional data provided by the API. */
 	additionalData?: StringIndexedObject;
-}
+};
 
 /////// Raw output types
 
@@ -219,6 +250,25 @@ export interface RawGroup{
 	name?: string;
 	title?: string;
 	image_display_url?: string;
+	[key: string]: any;
+};
+
+/** Raw License type */
+export interface License{
+	domain_content?: boolean;
+	domain_data?: boolean;
+	domain_software?: boolean;
+	family?: string;
+	id: string;
+	is_generic?: boolean;
+	maintainer?: string;
+	od_conformace?: string;
+	osd_conformance?: string;
+	status?: string;
+	title?: string;
+	url?: string;
+	is_okd_compliant?: boolean;
+	is_osi_compliant?: boolean;
 	[key: string]: any;
 };
 
@@ -308,7 +358,18 @@ export interface RawTag{
 	[key: string]: any;
 }
 
-/////// Miscellaneous types nested in responses
+/////// Miscellaneous types used in responses
+
+/** Generic CKAN response type */
+export interface GenericResponse<T>{
+	help: string;
+	success: boolean;
+	result?: T;
+	error?: {
+		__type: string;
+		message: string;
+	};
+};
 
 export interface Metadata{
 	created?: Date;

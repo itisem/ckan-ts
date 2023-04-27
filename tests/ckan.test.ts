@@ -29,4 +29,14 @@ describe("endpoints work as intended", () => {
 		const fullDetails = await parser.detailedDatasets();
 		expect(Array.isArray(fullDetails)).toBe(true);
 	});
+	test("can get license lists", async () => {
+		const baseDetails = await parser.licenses();
+		expect(Array.isArray(baseDetails)).toBe(true);
+	})
+	test("can get tag lists", async () => {
+		const baseDetails = await parser.tags();
+		expect(baseDetails.every(x => typeof x === "string"));
+		const fullDetails = await parser.detailedTags();
+		expect(Array.isArray(fullDetails)).toBe(true);
+	});
 });
