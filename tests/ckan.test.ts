@@ -1,4 +1,4 @@
-import CKAN from "../src/ckan";
+import CKAN from "../src/index";
 
 describe("setup", () => {
 	it("handles url variability correctly", () => {
@@ -23,16 +23,24 @@ describe("endpoints work as intended", () => {
 		const isActive = parser.available();
 		expect(isActive).resolves.toBe(true);
 	});
+	test("can get license lists", async () => {
+		const baseDetails = await parser.licenses();
+		expect(Array.isArray(baseDetails)).toBe(true);
+	});
+	test("can get group lists", async () => {
+		const baseDetails = await parser.groups();
+		expect(baseDetails.every(x => typeof x === "string"));
+		const someDetails = await parser.detailedGroups();
+		expect(Array.isArray(someDetails)).toBe(true);
+		expect(someDetails[0].stats.datasets).toBeUndefined();
+		// sadly, the process doesn't work the other way round as full details may stay end up being undefined when a method is not implemented
+	});
 	test("can get package lists", async () => {
 		const baseDetails = await parser.datasets();
 		expect(baseDetails.every(x => typeof x === "string"));
 		const fullDetails = await parser.detailedDatasets();
 		expect(Array.isArray(fullDetails)).toBe(true);
 	});
-	test("can get license lists", async () => {
-		const baseDetails = await parser.licenses();
-		expect(Array.isArray(baseDetails)).toBe(true);
-	})
 	test("can get tag lists", async () => {
 		const baseDetails = await parser.tags();
 		expect(baseDetails.every(x => typeof x === "string"));

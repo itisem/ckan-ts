@@ -2,6 +2,29 @@ import type {AxiosRequestConfig} from "axios";
 
 /////// Settings types
 
+/** Allowed HTTP request methods */
+export type AllowedMethods = "GET" | "POST" | "PATCH" | "DELETE";
+
+/** Group inclusion settings */
+export interface GroupInclusionOptions extends LimitOptions{
+	include?:{
+		datasetCount?: boolean;
+		extras?: boolean;
+	};
+};
+
+/** Limit and offset settings */
+export interface LimitOptions{
+	limit?: number;
+	offset?: number;
+};
+
+/** Settings for the tag search */
+export interface TagOptions{
+	query?: string;
+	vocabularyId?: string;
+};
+
 /** Settings for the CKAN module */
 export interface Settings{
 	/** Request options to pass along to got. For more info, see the documentation: https://axios-http.com/docs/req_config */
@@ -10,23 +33,36 @@ export interface Settings{
 	skipEndpointCorrection?: boolean
 };
 
-/** Allowed HTTP request methods */
-export type AllowedMethods = "GET" | "POST" | "PATCH" | "DELETE";
-
 /////// Parsed output types
 
 /** Group type */
 export interface Group{
+	/** The group's approval status */
+	approvalStatus?: string;
 	/** A long-form description of the group */
 	description: string;
 	/** The group's full, human-readable display name */
 	displayName: string;
+	/** The groups this group belongs to */
+	groups?: string[];
 	/** The group's id (usually a UUID) */
 	id: string;
 	/** The group's short name, often not human-readable */
 	name: string;
+	/** Is the group an organization */
+	organization?: boolean;
+	/** The group's state */
+	state?: string;
+	/** The group's numerical statistics */
+	stats: {
+		datasets?: number;
+		followers?: number;
+		packages?: number;
+	};
 	/** The group's full title */
 	title: string;
+	/** The group's type */
+	type?: string;
 	/** The group's display image */
 	imageUrl?: string;
 	/** Non-standard additional data provided by the API. */
@@ -244,10 +280,20 @@ export interface RawExtra{
 
 /** Raw group type */
 export interface RawGroup{
+	approval_status?: string;
+	created?: string;
+	dataset_count?: number;
 	description?: string;
 	display_name?: string;
+	groups?: string[];
 	id: string;
+	image_url?: string;
+	is_organization?: boolean;
 	name?: string;
+	num_followers?: number;
+	package_count?: number;
+	revision_id?: string;
+	state?: string;
 	title?: string;
 	image_display_url?: string;
 	[key: string]: any;
