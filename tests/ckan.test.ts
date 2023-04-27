@@ -39,6 +39,14 @@ describe("endpoints work as intended", () => {
 		const userDetails = await parserItaly.detailedGroups({include: {users: true}});
 		expect(Array.isArray(userDetails[0].users)).toBe(true);
 	});
+	test("can get organizations lists", async () => {
+		const baseDetails = await parser.organizations();
+		expect(baseDetails.every(x => typeof x === "string"));
+		const someDetails = await parser.detailedOrganizations();
+		expect(Array.isArray(someDetails)).toBe(true);
+		expect(someDetails[0].stats.datasets).toBeUndefined();
+		// sadly, the process doesn't work the other way round as full details may stay end up being undefined when a method is not implemented
+	});
 	test("can get package lists", async () => {
 		const baseDetails = await parser.datasets();
 		expect(baseDetails.every(x => typeof x === "string"));

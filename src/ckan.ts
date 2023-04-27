@@ -2,12 +2,14 @@ import axios, {AxiosResponse} from "axios";
 
 import parseGroup from "./parsers/group";
 import parseLicense from "./parsers/license";
+import parseOrganization from "./parsers/organization";
 import parsePackage from "./parsers/package";
 
 import type {
-	Settings, AllowedMethods, GroupInclusionOptions, LimitOptions, TagOptions, GenericResponse,
+	Settings, AllowedMethods, GenericResponse,
+	GroupOptions, LimitOptions, OrganizationOptions, SortOptions, TagOptions,
 	Group, License, Organization, Package, Resource, Tag, User,
-	RawGroup, RawLicense, RawPackage
+	RawGroup, RawLicense, RawOrganization, RawPackage
 } from "./types";
 
 /**
@@ -115,18 +117,18 @@ export default class CKAN{
 	}
 
 	/** Gets the API's group list by only names.
-	 * @param {LimitOptions?} [limit]
+	 * @param {SortOptions?} [settings]
 	 * @returns {Promise<string[]>}
 	 */
-	async groups(limit?: LimitOptions): Promise<string[]>{
-		return this.action("group_list", limit)
+	async groups(settings?: SortOptions): Promise<string[]>{
+		return this.action("group_list", settings)
 	}
 
 	/** Gets the API's group list with details.
-	 * @param {GroupInclusionOptions} [params={}]
+	 * @param {GroupOptions} [params={}]
 	 * @returns {Promise<Group[]>}
 	 */
-	async detailedGroups(params: GroupInclusionOptions = {}): Promise<Group[]>{
+	async detailedGroups(params: GroupOptions = {}): Promise<Group[]>{
 		if(!params.include) params.include = {};
 		const settings = {
 			limit: params.limit,
@@ -146,6 +148,31 @@ export default class CKAN{
 	async licenses(): Promise<License[]>{
 		const results: RawLicense[] = await this.action("license_list");
 		return results.map(x => parseLicense(x));
+	}
+
+	/** Gets the API's organizations list.
+	 * @param {SortOptions} [settings]
+	 * @returns {Promise<string[]>}
+	 */
+	async organizations(settings?: SortOptions): Promise<string[]>{
+		return this.action("organization_list", settings);
+	}
+
+	/** 
+	 * @param {OrganizationOptions} [params={}]
+	 */
+	async detailedOrganizations(params: OrganizationOptions = {}): Promise<Organization[]>{
+		if(!params.include) params.include = {};
+		const settings = {
+			limit: params.limit,
+			offset: params.offset,
+			all_fields: true,
+			include_dataset_count: params.include.datasetCount,
+			include_extras: params.include.extras,
+			include_users: params.include.users
+		};
+		const results: RawOrganization[] = await this.action("organization_list", settings);
+		return results.map(x => parseOrganization(x));
 	}
 
 	/** Gets the API's tag list.

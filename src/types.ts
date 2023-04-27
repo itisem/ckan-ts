@@ -6,8 +6,8 @@ import type {AxiosRequestConfig} from "axios";
 export type AllowedMethods = "GET" | "POST" | "PATCH" | "DELETE";
 
 /** Group inclusion settings */
-export interface GroupInclusionOptions extends LimitOptions{
-	include?:{
+export interface GroupOptions extends LimitOptions{
+	include?: {
 		datasetCount?: boolean;
 		extras?: boolean;
 		users?: boolean;
@@ -18,6 +18,19 @@ export interface GroupInclusionOptions extends LimitOptions{
 export interface LimitOptions{
 	limit?: number;
 	offset?: number;
+};
+
+/** Organization inclusion settings */
+export interface SortOptions extends LimitOptions{
+	sort?: "title" | "title asc" | "title desc" | "name" | "name asc" | "name desc" | "package_count" | "package_count asc" | "package_count desc";
+};
+
+export interface OrganizationOptions extends SortOptions{
+	include?: {
+		datasetCount?: boolean;
+		extras?: boolean;
+		users?: boolean;
+	}
 };
 
 /** Settings for the tag search */
@@ -120,6 +133,12 @@ export interface Organization{
 	isOrganization: boolean;
 	/** The organization's short name, often not human-readable */
 	name: string;
+	/** The organization's numerical statistics */
+	stats: {
+		datasets?: number;
+		followers?: number;
+		packages?: number;
+	};
 	/** The organization's full, human-readable title */
 	title: string;
 	/** Has the organization been approved in the database */
@@ -132,6 +151,8 @@ export interface Organization{
 	state?: string;
 	/** The organization's type */
 	type?: string;
+	/** The organization's members */
+	users?: User[];
 	/** Non-standard additional data provided by the API. */
 	additionalData?: StringIndexedObject;
 };
@@ -355,13 +376,17 @@ export interface RawOrganization{
 	id: string;
 	approval_status?: string;
 	created?: string;
+	dataset_count?: number;
 	description?: string;
 	image_url?: string;
 	is_organization?: boolean;
 	name?: string;
+	num_followers?: number;
+	package_count?: number;
 	state?: string;
 	title?: string;
 	type?: string;
+	users?: RawUser[];
 	[key: string]: any;
 };
 

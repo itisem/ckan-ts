@@ -1,6 +1,8 @@
 import type {RawOrganization, Organization} from "../types";
 
 import parseDate from "./date";
+import parseExtras from "./extras";
+import parseUser from "./user";
 
 /**
  * Processes an organization into consistent, parsed outputs.
@@ -10,8 +12,8 @@ import parseDate from "./date";
  */
 export default function parseOrganization(organization: RawOrganization): Organization{
 	const {
-		approval_status, created, description, id, image_url,
-		is_organization, name, state, title, type,
+		approval_status, created, dataset_count, description, extras, id, image_url,
+		is_organization, name, num_followers, package_count, state, title, type, users,
 		...rest
 	} = organization;
 	return {
@@ -23,8 +25,14 @@ export default function parseOrganization(organization: RawOrganization): Organi
 		isOrganization: is_organization ?? true,
 		name: name ?? "",
 		state,
+		stats: {
+			datasets: dataset_count,
+			followers: num_followers,
+			packages: package_count
+		},
 		title: title ?? "",
 		type,
-		additionalData: rest
+		users: users ? users.map(x => parseUser(x)) : [],
+		additionalData: {...rest, ...parseExtras(extras)}
 	};
 }
