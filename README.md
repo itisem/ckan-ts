@@ -12,11 +12,35 @@ import CKAN from "ckan-ts";
 const parser = new CKAN("https://demo.ckan.org/api/3/");
 const isAvailable = await parser.available();
 if(isAvailable){
-	const datasets = await parser.datasets(limit = 100);
+	const datasets = await parser.datasets({limit: 100});
 }
 ```
 
-For a full list of available methods, check the documentation.
+For the most part, ckan-ts is intended to retrieve data from unauthenticated endpoints. However, you can also pass it headers to use throughout, i.e.
+```javascript
+const parser = new CKAN("https://demo.ckan.org/api/3/", {
+	requestOptions: {
+		headers: {} // the desired http headers go here
+	}
+});
+````
+
+Currently supported methods:
+
+ * `.available()`: checks whether an API endpoint is currently available. [docs]()
+ * `.dataset(id)`: returns the metadata of a dataset with a given ID. [docs]()
+ * `.datasets(limit?)`: returns the IDs of all datasets on the server. [docs]()
+ * `.detailedDatasets(limit?)`: returns information about all datasets on the server, including their included resources. [docs]()
+ * `.groups(options?)`: returns the IDs of all groups on the server. [docs]()
+ * `.detailedGroups(options?)`: returns information about all groups on the server. [docs]()
+ * `.licenses()`: returns all the licenses used across datasets. [docs]()
+ * `.organizations(options?)`: returns the IDs of all organizations on the server. [docs]()
+ * `.detailedOrganizations(options?)`: returns information about all organizations on the server. [docs]()
+ * `.resource(id)`: returns the metadata of a resource with a given ID. [docs]()
+ * `.tags(options?)`: returns the name of all tags on the server. [docs]()
+ * `.detailedTags(options?)`: returns information about all tags on the server. [docs]()
+
+For a full list of available methods, their parameters, and returned data, check the documentation.
 
 ## License
 
