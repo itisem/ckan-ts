@@ -4,12 +4,14 @@ import parseGroup from "./parsers/group";
 import parseLicense from "./parsers/license";
 import parseOrganization from "./parsers/organization";
 import parsePackage from "./parsers/package";
+import parseTag from "./parsers/tag";
+import parseUser from "./parsers/user";
 
 import type {
 	Settings, AllowedMethods, GenericResponse,
-	GroupOptions, LimitOptions, OrganizationOptions, SortOptions, TagOptions,
+	GroupOptions, LimitOptions, OrganizationOptions, SortOptions, TagOptions, UserOptions,
 	Group, License, Organization, Package, Resource, Tag, User,
-	RawGroup, RawLicense, RawOrganization, RawPackage
+	RawGroup, RawLicense, RawOrganization, RawPackage, RawTag, RawUser,
 } from "./types";
 
 /**
@@ -56,6 +58,24 @@ export default class CKAN{
 		else{
 			baseUrl = baseUrl.replace(/(\/api)?(\/3)?(\/action)?\/*$/, "");
 			this._baseUrl = baseUrl + "/api/3/action/";
+		}
+	}
+
+	/**
+	 * Converts the user options to parameters that CKAN can handle
+	 * @private
+	 * @param {UserOptions} options
+	 */
+	private convertUserOptions(options: UserOptions){
+		const conversions = {
+			"displayName": "display_name",
+			"fullName": "fullname",
+			"packages": "number_created_packages"
+		};
+		return {
+			email: options.email,
+			order_by: options.sort ? (conversions[options.sort] ?? options.sort) : undefined,
+			q: options.search,
 		}
 	}
 
@@ -188,6 +208,24 @@ export default class CKAN{
 	 * @returns {Promise<Tag[]>}
 	 */
 	async detailedTags(settings?: TagOptions): Promise<Tag[]>{
-		return this.action("tag_list", settings);
+		const results: RawTag[] = await this.action("tag_list", {...settings, all_fields: true});
+		return results.map(x => parseTag(x));
+	}
+
+	/** Gets the API's user list.
+	 * @param {UserOptions} [settings={}]
+	 * @returns {Promise<string[]>}
+	 */
+	async users(settings: UserOptions = {}): Promise<string[]>{
+		return this.action("user_list", {...this.convertUserOptions(settings), all_fields: false});
+	}
+
+	/** Gets the API's detailed user list.
+	 * @param {UserOptions} [settings={}]
+	 * @returns {Promise<User[]>}
+	 */
+	async detailedUsers(settings: UserOptions = {}): Promise<User[]>{
+		const results: RawUser[] = await this.action("user_list", this.convertUserOptions(settings));
+		return results.map(x => parseUser(x));
 	}
 };

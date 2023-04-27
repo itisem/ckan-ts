@@ -6,7 +6,7 @@ import type {AxiosRequestConfig} from "axios";
 export type AllowedMethods = "GET" | "POST" | "PATCH" | "DELETE";
 
 /** Group inclusion settings */
-export interface GroupOptions extends LimitOptions{
+export interface GroupOptions extends SortOptions{
 	include?: {
 		datasetCount?: boolean;
 		extras?: boolean;
@@ -20,17 +20,25 @@ export interface LimitOptions{
 	offset?: number;
 };
 
-/** Organization inclusion settings */
+/** Basic rganization & group sort settings */
 export interface SortOptions extends LimitOptions{
 	sort?: "title" | "title asc" | "title desc" | "name" | "name asc" | "name desc" | "package_count" | "package_count asc" | "package_count desc";
 };
 
+/** Organization inclusion settings */
 export interface OrganizationOptions extends SortOptions{
 	include?: {
 		datasetCount?: boolean;
 		extras?: boolean;
 		users?: boolean;
 	}
+};
+
+/** User settings */
+export interface UserOptions{
+	search?: string;
+	email?: string;
+	sort?: "about" | "created" | "displayName" | "fullName" | "id" | "name" | "packages" | "sysadmin";
 };
 
 /** Settings for the tag search */
