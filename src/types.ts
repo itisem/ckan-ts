@@ -10,6 +10,7 @@ export interface GroupInclusionOptions extends LimitOptions{
 	include?:{
 		datasetCount?: boolean;
 		extras?: boolean;
+		users?: boolean;
 	};
 };
 
@@ -47,6 +48,8 @@ export interface Group{
 	groups?: string[];
 	/** The group's id (usually a UUID) */
 	id: string;
+	/** The group's display image */
+	imageUrl?: string;
 	/** The group's short name, often not human-readable */
 	name: string;
 	/** Is the group an organization */
@@ -63,8 +66,8 @@ export interface Group{
 	title: string;
 	/** The group's type */
 	type?: string;
-	/** The group's display image */
-	imageUrl?: string;
+	/** The group's members */
+	users?: User[];
 	/** Non-standard additional data provided by the API. */
 	additionalData?: StringIndexedObject;
 };
@@ -262,12 +265,40 @@ export interface Tag{
 	id: string;
 	/** The tag's short name, often not human-readable */
 	name: string;
-	/** What state is the tag in */
+	/** What status is the tag in */
 	state?: string;
 	/** The tag's vocabulary ID */
 	vocabularyId?: string;
 	/** Non-standard additional data provided by the API. */
 	additionalData?: StringIndexedObject;
+};
+
+/** User type */
+export interface User{
+	/** The user's display name */
+	displayName: string;
+	/** The user's id */
+	id: string;
+	/** The user's rights */
+	rights: {
+		role?: string;
+		sysadmin?: boolean;
+	};
+	/** The user's statistics */
+	stats: {
+		edits?: number;
+		packages?: number;
+	};
+	/** When the user account was created */
+	created?: Date;
+	/** The user's full name */
+	fullName?: string;
+	/** The user's openid */
+	openid?: string;
+	/** The user's status */
+	state?: string;
+	/** Non-standard additional data provided by the API. */
+	additionalData: StringIndexedObject;
 };
 
 /////// Raw output types
@@ -295,6 +326,7 @@ export interface RawGroup{
 	revision_id?: string;
 	state?: string;
 	title?: string;
+	users?: RawUser[];
 	image_display_url?: string;
 	[key: string]: any;
 };
@@ -402,7 +434,24 @@ export interface RawTag{
 	state?: string;
 	vocabulary_id?: string;
 	[key: string]: any;
-}
+};
+
+/** Raw user type */
+export interface RawUser{
+	activity_streams_email_notifications?: boolean;
+	about?: string;
+	capacity?: string;
+	display_name?: string;
+	fullname?: string;
+	email_hash?: string;
+	id: string;
+	number_created_packages?: number;
+	number_of_edits?: number;
+	openid?: string;
+	state?: string;
+	sysadmin?: boolean;
+	[key:string]: any;
+};
 
 /////// Miscellaneous types used in responses
 

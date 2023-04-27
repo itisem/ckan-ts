@@ -19,6 +19,7 @@ describe("setup", () => {
 
 describe("endpoints work as intended", () => {
 	const parser = new CKAN("https://demo.ckan.org/api/3/action");
+	const parserItaly = new CKAN("https://dati.gov.it/opendata/api/3/action");
 	test("can read site activity", async () => {
 		const isActive = parser.available();
 		expect(isActive).resolves.toBe(true);
@@ -34,6 +35,9 @@ describe("endpoints work as intended", () => {
 		expect(Array.isArray(someDetails)).toBe(true);
 		expect(someDetails[0].stats.datasets).toBeUndefined();
 		// sadly, the process doesn't work the other way round as full details may stay end up being undefined when a method is not implemented
+		// only the italian endpoint seems to allow user viewing without authorisation
+		const userDetails = await parserItaly.detailedGroups({include: {users: true}});
+		expect(Array.isArray(userDetails[0].users)).toBe(true);
 	});
 	test("can get package lists", async () => {
 		const baseDetails = await parser.datasets();
