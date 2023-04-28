@@ -12,7 +12,7 @@ import parseUser from "./user";
  */
 export default function parseOrganization(organization: RawOrganization): Organization{
 	const {
-		approval_status, created, dataset_count, description, extras, id, image_url,
+		approval_status, created, dataset_count, description, display_name, extras, id, image_url,
 		is_organization, name, num_followers, package_count, state, title, type, users,
 		...rest
 	} = organization;
@@ -20,6 +20,7 @@ export default function parseOrganization(organization: RawOrganization): Organi
 		approvalStatus: approval_status,
 		created: parseDate(created),
 		description: description ?? "",
+		displayName: display_name,
 		id,
 		imageUrl: image_url,
 		isOrganization: is_organization ?? true,

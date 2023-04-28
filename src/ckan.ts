@@ -10,7 +10,7 @@ import parseUser from "./parsers/user";
 
 import type {
 	Settings, AllowedMethods, GenericResponse,
-	GroupOptions, LimitOptions, OrganizationOptions, SortOptions, TagOptions, UserOptions,
+	ExpectedFieldsOptions, GroupOptions, LimitOptions, OrganizationOptions, SortOptions, TagOptions, UserOptions,
 	Group, License, Organization, Package, Resource, Tag, User,
 	RawGroup, RawLicense, RawOrganization, RawPackage, RawResource, RawTag, RawUser,
 } from "./types";
@@ -23,6 +23,8 @@ export default class CKAN{
 	private _baseUrl: string;
 	/** Settings for the API handler.*/
 	options: Settings;
+
+	static readonly malformedApiResponse = "Malformed API response, cannot parse data.";
 
 	/**
 	 * @constructor
@@ -81,6 +83,41 @@ export default class CKAN{
 	}
 
 	/**
+	 * Checks that implementations are not faulty, and simplified endpoints are in fact simplified
+	 * Must be used before returning a string array since there are 0 guarantees that responses are formatted correctly
+	 * And according to my TypeScript definitions 
+	 * @private
+	 * @template T
+	 * @param {T} check - the array that needs checking. Should be string[], but mis-implemented APIs can cause an error
+	 * @returns {string[]}
+	 */
+	private assertStringArray<T>(check: T): string[]{
+		if(!Array.isArray(check)) throw new Error(CKAN.malformedApiResponse);
+		if(check.some(x => typeof x !== "string")) throw new Error(CKAN.malformedApiResponse);
+		return check;
+	}
+
+	/**
+	 * Checks that implementations are not faulty, and detailed endpoints do, in fact, return details
+	 * Must be used before returning a string array since there are 0 guarantees that responses are formatted correctly
+	 * And according to my TypeScript definitions 
+	 * @private
+	 * @template T
+	 * @param {T} check - the array that needs checking
+	 * @param {string[]} [expectedFields]
+	 * @returns {T}
+	 */
+	private assertObjectArray<T>(check: T, expectedFields?: string[]): T{
+		if(!Array.isArray(check)) throw new Error(CKAN.malformedApiResponse);
+		if(check.some(x => {
+			if(typeof x !== "object" || x === null) return true;
+			for(let field of expectedFields) if(x[field] === undefined) return true;
+			return false;
+		})) throw new Error(CKAN.malformedApiResponse);
+		return check;
+	}
+
+	/**
 	 * Carries out a generic CKAN action. Should generally be avoided in favour of specific functions unless the action has not been implemented.
 	 * @template T
 	 * @template U
@@ -123,27 +160,30 @@ export default class CKAN{
 	 * @returns {Promise<Package>}
 	 */
 	async dataset(id: string): Promise<Package>{
-		const result: RawPackage = await this.action("package_show", {id, "use_default_schema": true});
-		return parsePackage(result);
+		const results: RawPackage = await this.action("package_show", {id, "use_default_schema": true});
+		return parsePackage(results);
 	}
 
 	/** Gets the API's package list.
-	 * @param {LimitOptions?} [limit]
+	 * @param {LimitOptions?} [settings]
 	 * @returns {Promise<string[]>}
 	 */
-	async datasets(limit?: LimitOptions): Promise<string[]>{
-		return this.action("package_list", limit);
+	async datasets(settings?: LimitOptions): Promise<string[]>{
+		const results = await this.action("package_list", settings);
+		return this.assertStringArray(results);
 	}
 
 	/** Gets the API's package list with additional information.
-	 * @param {LimitOptions?} [limit]
+	 * @param {LimitOptions & ExpectedFieldsOptions} [settings]
 	 * @returns {Promise<Package[]>}
 	 */
-	async detailedDatasets(limit?: LimitOptions): Promise<Package[]>{
-		const results: RawPackage[] = await this.action("current_package_list_with_resources", limit);
-		let newResults: Package[];
-		newResults = results.map(x => parsePackage(x));
-		return newResults;
+	async detailedDatasets(settings?: LimitOptions & ExpectedFieldsOptions): Promise<Package[]>{
+		if(settings === undefined) settings = {};
+		if(settings.expectedFields === undefined) settings.expectedFields = ["id", "title", "url"];
+		let {expectedFields, ...params} = settings;
+		const results: RawPackage[] = await this.action("current_package_list_with_resources", params);
+		const parsedResults: Package[] = this.assertObjectArray(results.map(x => parsePackage(x)), expectedFields);
+		return parsedResults;
 	}
 
 	/** Gets the API's group list by only names.
@@ -151,25 +191,28 @@ export default class CKAN{
 	 * @returns {Promise<string[]>}
 	 */
 	async groups(settings?: SortOptions): Promise<string[]>{
-		return this.action("group_list", settings)
+		const results = await this.action("group_list", settings);
+		return this.assertStringArray(results);
 	}
 
 	/** Gets the API's group list with details.
-	 * @param {GroupOptions} [params={}]
+	 * @param {GroupOptions} [settings={}]
 	 * @returns {Promise<Group[]>}
 	 */
-	async detailedGroups(params: GroupOptions = {}): Promise<Group[]>{
-		if(!params.include) params.include = {};
-		const settings = {
-			limit: params.limit,
-			offset: params.offset,
+	async detailedGroups(settings: GroupOptions = {}): Promise<Group[]>{
+		if(!settings.include) settings.include = {};
+		if(!settings.expectedFields) settings.expectedFields = ["id", "displayName"];
+		const params = {
+			limit: settings.limit,
+			offset: settings.offset,
 			all_fields: true,
-			include_dataset_count: params.include.datasetCount,
-			include_extras: params.include.extras,
-			include_users: params.include.users
+			include_dataset_count: settings.include.datasetCount,
+			include_extras: settings.include.extras,
+			include_users: settings.include.users
 		};
-		const groups: RawGroup[] = await this.action("group_list", settings);
-		return groups.map(x => parseGroup(x));
+		const results: RawGroup[] = await this.action("group_list", params);
+		const parsedResults: Group[] = this.assertObjectArray(results.map(x => parseGroup(x)), settings.expectedFields);
+		return parsedResults;
 	}
 
 	/** Gets the API's license list.
@@ -185,24 +228,27 @@ export default class CKAN{
 	 * @returns {Promise<string[]>}
 	 */
 	async organizations(settings?: SortOptions): Promise<string[]>{
-		return this.action("organization_list", settings);
+		const results = await this.action("organization_list", settings);
+		return this.assertStringArray(results);
 	}
 
 	/** 
 	 * @param {OrganizationOptions} [params={}]
 	 */
-	async detailedOrganizations(params: OrganizationOptions = {}): Promise<Organization[]>{
-		if(!params.include) params.include = {};
-		const settings = {
-			limit: params.limit,
-			offset: params.offset,
+	async detailedOrganizations(settings: OrganizationOptions = {}): Promise<Organization[]>{
+		if(!settings.include) settings.include = {};
+		if(!settings.expectedFields) settings.expectedFields = ["id", "displayName"];
+		const params = {
+			limit: settings.limit,
+			offset: settings.offset,
 			all_fields: true,
-			include_dataset_count: params.include.datasetCount,
-			include_extras: params.include.extras,
-			include_users: params.include.users
+			include_dataset_count: settings.include.datasetCount,
+			include_extras: settings.include.extras,
+			include_users: settings.include.users
 		};
-		const results: RawOrganization[] = await this.action("organization_list", settings);
-		return results.map(x => parseOrganization(x));
+		const results: RawOrganization[] = await this.action("organization_list", params);
+		const parsedResults: Organization[] = this.assertObjectArray(results.map(x => parseOrganization(x)), settings.expectedFields);
+		return parsedResults;
 	}
 
 	/** Gets the details of a resource from the API.
@@ -210,8 +256,8 @@ export default class CKAN{
 	 * @returns {Promise<Resource>}
 	 */
 	async resource(id: string): Promise<Resource>{
-		const result: RawResource = await this.action("resource_show", {id, "use_default_schema": true});
-		return parseResource(result);
+		const results: RawResource = await this.action("resource_show", {id, "use_default_schema": true});
+		return parseResource(results);
 	}
 
 	/** Gets the API's tag list.
@@ -219,7 +265,8 @@ export default class CKAN{
 	 * @returns {Promise<string[]>}
 	 */
 	async tags(settings?: TagOptions): Promise<string[]>{
-		return this.action("tag_list", settings);
+		const results = await this.action("tag_list", settings);
+		return this.assertStringArray(results);
 	}
 
 	/** Gets the API's tag list with details.
@@ -236,7 +283,8 @@ export default class CKAN{
 	 * @returns {Promise<string[]>}
 	 */
 	async users(settings: UserOptions = {}): Promise<string[]>{
-		return this.action("user_list", {...this.convertUserOptions(settings), all_fields: false});
+		const results = await this.action("user_list", {...this.convertUserOptions(settings), all_fields: false});
+		return this.assertStringArray(results);
 	}
 
 	/** Gets the API's detailed user list.

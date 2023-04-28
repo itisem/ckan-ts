@@ -17,7 +17,7 @@ export default function parseGroup(group: RawGroup): Group{
 	return {
 		approvalStatus: approval_status,
 		description: description ?? "",
-		displayName: display_name ?? "",
+		displayName: display_name,
 		id,
 		imageUrl: image_display_url,
 		groups,

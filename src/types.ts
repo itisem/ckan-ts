@@ -5,8 +5,13 @@ import type {AxiosRequestConfig} from "axios";
 /** Allowed HTTP request methods */
 export type AllowedMethods = "GET" | "POST" | "PATCH" | "DELETE";
 
+/** Expected field options */
+export interface ExpectedFieldsOptions{
+	expectedFields?: string[];
+};
+
 /** Group inclusion settings */
-export interface GroupOptions extends SortOptions{
+export interface GroupOptions extends SortOptions, ExpectedFieldsOptions{
 	include?: {
 		datasetCount?: boolean;
 		extras?: boolean;
@@ -26,7 +31,7 @@ export interface SortOptions extends LimitOptions{
 };
 
 /** Organization inclusion settings */
-export interface OrganizationOptions extends SortOptions{
+export interface OrganizationOptions extends SortOptions, ExpectedFieldsOptions{
 	include?: {
 		datasetCount?: boolean;
 		extras?: boolean;
@@ -105,9 +110,9 @@ export interface License{
 	/** The license's conformance with other standards */
 	conformance: {
 		/** Is the license conformant with the Open Definition */
-		od?: boolean;
+		od?: string;
 		/** Is the license conformant with the Open Source Definition */
-		osd?: boolean;
+		osd?: string;
 	};
 	/** The license's usage on the domain */
 	domain: {
@@ -135,6 +140,8 @@ export interface License{
 export interface Organization{
 	/** A long-form description of the organization */
 	description: string;
+	/** The group's full, human-readable display name */
+	displayName: string;
 	/** The organization's ID (usually a UUID) */
 	id: string;
 	/** Is the organization an organization? (Almost always true) */
@@ -344,7 +351,7 @@ export interface RawGroup{
 	created?: string;
 	dataset_count?: number;
 	description?: string;
-	display_name?: string;
+	display_name: string;
 	groups?: string[];
 	id: string;
 	image_url?: string;
@@ -369,8 +376,8 @@ export interface RawLicense{
 	id: string;
 	is_generic?: boolean;
 	maintainer?: string;
-	od_conformace?: boolean;
-	osd_conformance?: boolean;
+	od_conformace?: string;
+	osd_conformance?: string;
 	status?: string;
 	title?: string;
 	url?: string;
@@ -386,6 +393,7 @@ export interface RawOrganization{
 	created?: string;
 	dataset_count?: number;
 	description?: string;
+	displayName: string;
 	image_url?: string;
 	is_organization?: boolean;
 	name?: string;
