@@ -19,13 +19,26 @@ export interface GroupOptions extends SortOptions, ExpectedFieldsOptions{
 	};
 };
 
+/** Single group data settings */
+export interface SingleGroupOptions{
+	include?: {
+		datasets?: boolean;
+		datasetCount?: boolean;
+		followers?: boolean;
+		extras?: boolean;
+		subgroups?: boolean;
+		tags?: boolean;
+		users?: boolean;
+	};
+};
+
 /** Limit and offset settings */
 export interface LimitOptions{
 	limit?: number;
 	offset?: number;
 };
 
-/** Basic rganization & group sort settings */
+/** Basic organization & group sort settings */
 export interface SortOptions extends LimitOptions{
 	sort?: "title" | "title asc" | "title desc" | "name" | "name asc" | "name desc" | "package_count" | "package_count asc" | "package_count desc";
 };
@@ -66,6 +79,10 @@ export interface Settings{
 export interface Group{
 	/** The group's approval status */
 	approvalStatus?: string;
+	/** When was the group created */
+	created?: Date;
+	/** Package count */
+	datasetCount?: number;
 	/** A long-form description of the group */
 	description: string;
 	/** The group's full, human-readable display name */

@@ -11,6 +11,7 @@ import parseUser from "./parsers/user";
 import type {
 	Settings, AllowedMethods, GenericResponse,
 	ExpectedFieldsOptions, GroupOptions, LimitOptions, OrganizationOptions, SortOptions, TagOptions, UserOptions,
+	SingleGroupOptions,
 	Group, License, Organization, Package, Resource, Tag, User,
 	RawGroup, RawLicense, RawOrganization, RawPackage, RawResource, RawTag, RawUser,
 } from "./types";
@@ -109,9 +110,12 @@ export default class CKAN{
 	 */
 	private assertObjectArray<T>(check: T, expectedFields?: string[]): T{
 		if(!Array.isArray(check)) throw new Error(CKAN.malformedApiResponse);
+		if(!expectedFields) expectedFields = [];
 		if(check.some(x => {
 			if(typeof x !== "object" || x === null) return true;
-			for(let field of expectedFields) if(x[field] === undefined) return true;
+			for(let field of expectedFields){
+				if(x[field] === undefined)return true;
+			}
 			return false;
 		})) throw new Error(CKAN.malformedApiResponse);
 		return check;
@@ -183,6 +187,28 @@ export default class CKAN{
 		let {expectedFields, ...params} = settings;
 		const results: RawPackage[] = await this.action("current_package_list_with_resources", params);
 		const parsedResults: Package[] = this.assertObjectArray(results.map(x => parsePackage(x)), expectedFields);
+		return parsedResults;
+	}
+
+	/** Gets a group from the API
+	 * @param {string} id
+	 * @param {SingleGroupOptions?} [settings]
+	 */
+	async group(id: string, settings: SingleGroupOptions): Promise<Group>{
+		if(settings === undefined) settings = {};
+		if(settings.include === undefined) settings.include = {};
+		const params = {
+			id,
+			include_datasets: !!settings.include.datasets,
+			include_dataset_count: settings.include.datasetCount ?? true,
+			include_extras: settings.include.extras ?? true,
+			include_users: !!settings.include.users,
+			include_groups: settings.include.subgroups ?? true,
+			include_tags: settings.include.tags ?? true,
+			include_followers: settings.include.followers ?? true
+		};
+		const results: RawGroup = await this.action("group_show", params);
+		const parsedResults: Group = parseGroup(results);
 		return parsedResults;
 	}
 

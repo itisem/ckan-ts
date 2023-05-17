@@ -24,6 +24,20 @@ describe("setup", () => {
 
 // parser tests: TODO
 
+// helper method tests
+describe("response assertions", () => {
+	test("object arrays", () => {
+		expect(() => parser["assertObjectArray"]([1, 2, 3])).toThrow(Error);
+		expect(() => parser["assertObjectArray"]([{a: 1}], ["a", "b"])).toThrow(Error);
+		expect(parser["assertObjectArray"]([])).toEqual([]);
+		expect(parser["assertObjectArray"]([{a: 1, b: 2}], ["a", "b"])).toEqual([{a: 1, b: 2}]);
+	});
+	test("string arrays", () => {
+		expect(() => parser["assertStringArray"]([1, 2, 3])).toThrow(Error);
+		expect(parser["assertStringArray"]([])).toEqual([]);
+		expect(parser["assertStringArray"](["1", "2", "3"])).toEqual(["1", "2", "3"]);
+	})
+});
 
 
 // endpoint tests
@@ -94,7 +108,7 @@ describe("license-related endpoints", () => {
 			}
 		});
 	});
-})
+});
 
 describe("meta-api endpoints", () => {
 	test("can read site activity", async () => {
@@ -146,4 +160,4 @@ describe("malformed responses", () => {
 	test("errors on malformed object response", () => {
 		expect(parser.detailedGroups({expectedFields: ["groningen"]})).rejects.toThrow();
 	});
-})
+});

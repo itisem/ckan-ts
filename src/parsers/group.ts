@@ -2,6 +2,7 @@ import type {RawGroup, Group} from "../types";
 
 import parseUser from "./user";
 import parseExtras from "./extras";
+import parseDate from "./date";
 
 /** Parses a group
  * @param {RawGroup} group
@@ -16,6 +17,7 @@ export default function parseGroup(group: RawGroup): Group{
 	delete rest.image_url;
 	return {
 		approvalStatus: approval_status,
+		created: parseDate(created),
 		description: description ?? "",
 		displayName: display_name,
 		id,
