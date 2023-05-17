@@ -38,9 +38,15 @@ export interface LimitOptions{
 	offset?: number;
 };
 
+/** Simple sort options */
+export interface BaseSortOptions{
+	by: "title" | "name" | "datasets";
+	order?: "asc" | "desc";
+};
+
 /** Basic organization & group sort settings */
 export interface SortOptions extends LimitOptions{
-	sort?: "title" | "title asc" | "title desc" | "name" | "name asc" | "name desc" | "package_count" | "package_count asc" | "package_count desc";
+	sort?: BaseSortOptions | string;
 };
 
 /** Organization inclusion settings */
@@ -56,7 +62,7 @@ export interface OrganizationOptions extends SortOptions, ExpectedFieldsOptions{
 export interface UserOptions{
 	search?: string;
 	email?: string;
-	sort?: "about" | "created" | "displayName" | "fullName" | "id" | "name" | "packages" | "sysadmin";
+	sort?: "about" | "created" | "displayName" | "fullName" | "id" | "name" | "datasets" | "sysadmin";
 };
 
 /** Settings for the tag search */
@@ -82,8 +88,8 @@ export interface AutocompleteGroup{
 	title: string;
 };
 
-/** Autocomplete package type */
-export interface AutocompletePackage{
+/** Autocomplete dataset type */
+export interface AutocompleteDataset{
 	name: string;
 	title: string;
 	match?: {
@@ -125,7 +131,6 @@ export interface Group{
 	stats: {
 		datasets?: number;
 		followers?: number;
-		packages?: number;
 	};
 	/** The group's full title */
 	title: string;
@@ -191,7 +196,6 @@ export interface Organization{
 	stats: {
 		datasets?: number;
 		followers?: number;
-		packages?: number;
 	};
 	/** The organization's full, human-readable title */
 	title: string;
@@ -211,9 +215,9 @@ export interface Organization{
 	additionalData?: StringIndexedObject;
 };
 
-/** Processed CKAN package type */
-export interface Package{
-	/** The package's author */
+/** Processed CKAN dataset type */
+export interface Dataset{
+	/** The dataset's author */
 	author: {
 		name?: string;
 		email?: string;
@@ -224,9 +228,9 @@ export interface Package{
 	};
 	/** Group information */
 	groups: Group[];
-	/** The identification of the package */
+	/** The identification of the dataset */
 	id: string;
-	/** A list of languages the package is available in */
+	/** A list of languages the dataset is available in */
 	languages: string[];
 	/** The license under which the resource was released */
 	license: {
@@ -234,45 +238,45 @@ export interface Package{
 		title?: string;
 		url?: string;
 	};
-	/** The package's maintainer */
+	/** The dataset's maintainer */
 	maintainer: {
 		name?: string;
 		email?: string;
 	};
 	/** Meta-metadata */
 	metadata: Metadata;
-	/** The package's name, often not human-readable. */
+	/** The dataset's name, often not human-readable. */
 	name: string;
 	/** Information about the publishing organisation */
 	organization?: Organization;
-	/** Resources for the given package. */
+	/** Resources for the given dataset. */
 	resources: Resource[];
 	/** The object's relationships */
 	relationships: {
 		subject?: any[];
 		object?: any[];
 	};
-	/** The package's tags */
+	/** The dataset's tags */
 	tags: Tag[];
-	/** The package's title, human-readable */
+	/** The dataset's title, human-readable */
 	title: string;
-	/** The package's permanent URL */
+	/** The dataset's permanent URL */
 	url: string;
-	/** When the package was first issued */
+	/** When the dataset was first issued */
 	created?: Date;
-	/** When the package was last modified */
+	/** When the dataset was last modified */
 	modified?: Date;
-	/** Notes the publisher has released about the package */
+	/** Notes the publisher has released about the dataset */
 	notes?: string;
-	/** Is the package open */
+	/** Is the dataset open */
 	open?: boolean;
-	/** Is the package private? */
+	/** Is the dataset private? */
 	private?: boolean;
-	/** What is the package's state */
+	/** What is the dataset's state */
 	state?: string;
-	/** What type of package is it (usually, but not always "dataset") */
+	/** What type of dataset is it (usually, but not always "dataset") */
 	type?: string;
-	/** The package's current version number */
+	/** The dataset's current version number */
 	version?: string;
 	/** Non-standard additional data provided by the API. */
 	additionalData?: StringIndexedObject;
@@ -290,6 +294,13 @@ export interface Resource{
 		url?: string;
 		updated?: Date;
 	};
+	/** The dataset the resource belongs to */
+	dataset: {
+		/** The dataset's ID */
+		id?: string;
+		/** The resource's position within the dataset */
+		position?: number;
+	};
 	/** The resource's ID */
 	id: string;
 	/** Which languages the resource was published in */
@@ -305,13 +316,6 @@ export interface Resource{
 	};
 	/** The resource's short name, may not be human-readable */
 	name: string;
-	/** The package the resource belongs to */
-	package: {
-		/** The package's ID */
-		id?: string;
-		/** The resource's position within the package */
-		position?: number;
-	};
 	/** The resource's url */
 	url: string;
 	/** When the resource was created */
@@ -362,7 +366,7 @@ export interface User{
 	/** The user's statistics */
 	stats: {
 		edits?: number;
-		packages?: number;
+		datasets?: number;
 	};
 	/** When the user account was created */
 	created?: Date;
@@ -376,10 +380,22 @@ export interface User{
 	additionalData: StringIndexedObject;
 };
 
+/** Vocabulary type */
+export interface Vocabulary{
+	/** The vocabulary's id */
+	id: string;
+	/** The vocabulary's name */
+	name: string;
+	/** The tags associated with the vocabulary */
+	tags: Tag[];
+	/** Non-standard additional data provided by the API. */
+	additionalData: StringIndexedObject;
+};
+
 /////// Raw output types
 
-/** Raw autocomplete package type */
-export interface RawAutocompletePackage{
+/** Raw autocomplete dataset type */
+export interface RawAutocompleteDataset{
 	match_field?: string;
 	match_displayed?: string;
 	name: string;
@@ -459,8 +475,8 @@ export interface RawOrganization{
 	[key: string]: any;
 };
 
-/** Raw CKAN package type for processing */
-export interface RawPackage{
+/** Raw CKAN dataset type for processing */
+export interface RawDataset{
 	id: string;
 	name: string;
 	title: string;
@@ -544,6 +560,14 @@ export interface RawUser{
 	openid?: string;
 	state?: string;
 	sysadmin?: boolean;
+	[key:string]: any;
+};
+
+/** Vocabulary type */
+export interface RawVocabulary{
+	id: string;
+	name: string;
+	tags: RawTag[];
 	[key:string]: any;
 };
 

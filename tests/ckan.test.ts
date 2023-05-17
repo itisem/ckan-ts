@@ -62,6 +62,9 @@ describe("autocomplete endpoints", () => {
 	test("autocomplete format", async () => {
 		expect(await parser.autocompleteFormat("csv")).toEqual(["csv"]);
 	});
+	test("autocomplete tag", async () => {
+		expect(await parser.autocompleteFormat("geo")).toEqual(["geojson"]);
+	});
 	test("autocomplete organization", async () => {
 		expect(await parser.autocompleteOrganization("sample")).toEqual([{
 			id: "1fa89238-ee96-4439-a885-22d15244d070",
@@ -113,7 +116,6 @@ describe("group-related endpoints", () => {
 	test("can get detailed groups without additional information", async () => {
 		const results = await parser.detailedGroups();
 		expect(results.some(x => typeof x === "string")).toBe(false);
-		expect(results[0].stats.datasets).toBeUndefined();
 	});
 	// sadly, including fields may not always yield defined results as full details may stay undefined when a method is not implemented
 	// indeed, all the testing endpoints return no additional data in at least one situation
@@ -159,9 +161,12 @@ describe("organization-related endpoints", () => {
 	test("full organization lists", async () => {
 		const results = await parser.detailedOrganizations();
 		expect(results.some(x => typeof x === "string")).toBe(false);
-		expect(results[0].stats.datasets).toBeUndefined();
 		// sadly, the process doesn't work the other way round as full details may stay end up being undefined when a method is not implemented
 		// once again, the correct handling of such data is therefore left to the parser tests
+	});
+	test("single organization", async() => {
+		const results = await parser.organization("sample-organization");
+		expect(results.title).toBe("Sample Organization");
 	});
 });
 
@@ -183,6 +188,21 @@ describe("user-related endpoints", () => {
 		expect(results.some(x => typeof x === "string")).toBe(false);
 	}, 20000);
 });
+
+// needs the italian parser for testing since the demo doesn't have vocabularies
+describe("vocabulary-related endpoints", () => {
+	test("can get vocabularies", async () => {
+		const results = await parserItaly.vocabularies();
+		expect(results.some(x => typeof x === "string")).toBe(false);
+	});
+	test("can get vocabulary", async () => {
+		const results = await parserItaly.vocabulary("ae537949-d633-46c0-b41b-c9580aacd178");
+		expect(results.id).toBe("ae537949-d633-46c0-b41b-c9580aacd178");
+		expect(results.name).toBe("languages");
+		const tags = results.tags.map(x => x.name);
+		expect(tags.includes("ITA")).toBe(true);
+	}, 20000);
+})
 
 describe("malformed responses", () => {
 	// the italian endpoint has a faulty implementation for all_fields=false, meaning that it will never be an array of strings

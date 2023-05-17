@@ -20,7 +20,7 @@ export default function parseUser(user: RawUser): User{
 		},
 		stats: {
 			edits: number_of_edits,
-			packages: number_created_packages
+			datasets: number_created_packages
 		},
 		created: parseDate(created),
 		fullName: fullname,

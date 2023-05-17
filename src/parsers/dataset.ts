@@ -1,4 +1,4 @@
-import type {RawPackage, Package} from "../types";
+import type {RawDataset, Dataset} from "../types";
 
 import parseDate from "./date";
 import parseExtras from "./extras";
@@ -9,11 +9,11 @@ import parseResource from "./resource";
 import parseTag from "./tag";
 
 /**
- * Processes a package into consistent, parsed outputs.
- * @param {RawPackage} ckanPackage
- * @returns {Package}
+ * Processes a dataset into consistent, parsed outputs.
+ * @param {RawDataset} ckanDataset
+ * @returns {Dataset}
  */
-export default function parsePackage(ckanPackage: RawPackage): Package{
+export default function parseDataset(ckanDataset: RawDataset): Dataset{
 	const {
 			author, author_email, issued, creator_user_id, groups, id, language,
 			license_id, license_title, license_url, maintainer, maintainer_email,
@@ -22,7 +22,7 @@ export default function parsePackage(ckanPackage: RawPackage): Package{
 			relationships_as_object, relationships_as_subject, state,
 			tags, title, type, url, version,
 			extras, ...rest
-		} = ckanPackage;
+		} = ckanDataset;
 		// workaround since "private" can't be destructured due to being a reserved keyword 
 		const isPrivate = rest.private;
 		delete rest.private;

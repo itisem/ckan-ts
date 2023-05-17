@@ -3,17 +3,20 @@ import axios, {AxiosResponse} from "axios";
 import parseGroup from "./parsers/group";
 import parseLicense from "./parsers/license";
 import parseOrganization from "./parsers/organization";
-import parsePackage from "./parsers/package";
+import parseDataset from "./parsers/dataset";
 import parseResource from "./parsers/resource";
 import parseTag from "./parsers/tag";
 import parseUser from "./parsers/user";
+import parseVocabulary from "./parsers/vocabulary";
 
 import type {
 	Settings, AllowedMethods, GenericResponse,
 	ExpectedFieldsOptions, GroupOptions, LimitOptions, OrganizationOptions, SortOptions, TagOptions, UserOptions,
-	SingleGroupOptions,
-	Group, License, Organization, Package, Resource, Tag, User, AutocompletePackage, AutocompleteUser, AutocompleteGroup,
-	RawGroup, RawLicense, RawOrganization, RawPackage, RawResource, RawTag, RawUser, RawAutocompletePackage,
+	SingleGroupOptions, BaseSortOptions,
+	Group, License, Organization, Dataset, Resource, Tag, User,
+	Vocabulary, AutocompleteDataset, AutocompleteUser, AutocompleteGroup,
+	RawGroup, RawLicense, RawOrganization, RawDataset, RawResource, RawVocabulary,
+	RawTag, RawUser, RawAutocompleteDataset,
 	RawAutocompleteUser
 } from "./types";
 
@@ -75,13 +78,30 @@ export default class CKAN{
 		const conversions = {
 			"displayName": "display_name",
 			"fullName": "fullname",
-			"packages": "number_created_packages"
+			"datasets": "number_created_packages"
 		};
 		return {
 			email: options.email,
 			order_by: options.sort ? (conversions[options.sort] ?? options.sort) : undefined,
 			q: options.search,
 		}
+	}
+
+	/** Converts the sort options to parameters that CKAN can handle
+	 * @private
+	 * @param {BaseSortOptions|string|undefined} options
+	 * @returns {string|undefined}
+	 */
+	private convertSortOptions(options: BaseSortOptions | string | undefined): string | undefined{
+		const mapping = {
+			datasets: "package_count",
+			title: "title",
+			name: "name"
+		};
+		if(!options) return undefined;
+		if(typeof options === "string") return mapping[options];
+		if(options.order) return mapping[options.by] + " " + options.order;
+		else return mapping[options.by];
 	}
 
 	/**
@@ -163,12 +183,12 @@ export default class CKAN{
 	/** Gets the autocomplete list for datasets
 	 * @param {string} query
 	 * @param {number?} limit
-	 * @returns {Promise <AutocompletePackage[]>}
+	 * @returns {Promise <AutocompleteDataset[]>}
 	 */
-	async autocompleteDataset(query: string, limit?: number): Promise<AutocompletePackage[]>{
+	async autocompleteDataset(query: string, limit?: number): Promise<AutocompleteDataset[]>{
 		const expectedFields = ["name", "title", "match"];
-		const results: RawAutocompletePackage[] = await this.action("package_autocomplete", {q: query, limit});
-		const parsedResults: AutocompletePackage[] = this.assertObjectArray(
+		const results: RawAutocompleteDataset[] = await this.action("package_autocomplete", {q: query, limit});
+		const parsedResults: AutocompleteDataset[] = this.assertObjectArray(
 			results.map(x => {
 				const {match_field, match_displayed, name, title} = x;
 				return {
@@ -215,6 +235,16 @@ export default class CKAN{
 		return this.assertObjectArray(results, ["id", "name", "title"]) as AutocompleteGroup[];
 	}
 
+	/** Gets the autocomplete list for tags
+	 * @param {string} query
+	 * @param {number?} limit
+	 * @returns {Promise <string[]>}
+	 */
+	async autocompleteTag(query: string, limit?: number): Promise<string[]>{
+		const results: string[] = await this.action("tag_autocomplete", {q: query, limit});
+		return this.assertStringArray(results);
+	}
+
 	/** Gets the autocomplete list for formats
 	 * @param {string} query
 	 * @param {number?} limit
@@ -231,14 +261,14 @@ export default class CKAN{
 
 	/** Gets the details of a data set from the API.
 	 * @param {string} id
-	 * @returns {Promise<Package>}
+	 * @returns {Promise<Dataset>}
 	 */
-	async dataset(id: string): Promise<Package>{
-		const results: RawPackage = await this.action("package_show", {id, "use_default_schema": true});
-		return parsePackage(results);
+	async dataset(id: string): Promise<Dataset>{
+		const results: RawDataset = await this.action("package_show", {id, "use_default_schema": true});
+		return parseDataset(results);
 	}
 
-	/** Gets the API's package list.
+	/** Gets the API's dataset list.
 	 * @param {LimitOptions?} [settings]
 	 * @returns {Promise<string[]>}
 	 */
@@ -247,16 +277,16 @@ export default class CKAN{
 		return this.assertStringArray(results);
 	}
 
-	/** Gets the API's package list with additional information.
+	/** Gets the API's dataset list with additional information.
 	 * @param {LimitOptions & ExpectedFieldsOptions} [settings]
-	 * @returns {Promise<Package[]>}
+	 * @returns {Promise<Dataset[]>}
 	 */
-	async detailedDatasets(settings?: LimitOptions & ExpectedFieldsOptions): Promise<Package[]>{
+	async detailedDatasets(settings?: LimitOptions & ExpectedFieldsOptions): Promise<Dataset[]>{
 		if(settings === undefined) settings = {};
 		if(settings.expectedFields === undefined) settings.expectedFields = ["id", "title", "url"];
 		let {expectedFields, ...params} = settings;
-		const results: RawPackage[] = await this.action("current_package_list_with_resources", params);
-		const parsedResults: Package[] = this.assertObjectArray(results.map(x => parsePackage(x)), expectedFields);
+		const results: RawDataset[] = await this.action("current_package_list_with_resources", params);
+		const parsedResults: Dataset[] = this.assertObjectArray(results.map(x => parseDataset(x)), expectedFields);
 		return parsedResults;
 	}
 
@@ -287,7 +317,8 @@ export default class CKAN{
 	 * @returns {Promise<string[]>}
 	 */
 	async groups(settings?: SortOptions): Promise<string[]>{
-		const results = await this.action("group_list", settings);
+		const sort = this.convertSortOptions(settings?.sort);
+		const results = await this.action("group_list", {sort});
 		return this.assertStringArray(results);
 	}
 
@@ -304,7 +335,8 @@ export default class CKAN{
 			all_fields: true,
 			include_dataset_count: settings.include.datasetCount,
 			include_extras: settings.include.extras,
-			include_users: settings.include.users
+			include_users: settings.include.users,
+			sort: this.convertSortOptions(settings.sort)
 		};
 		const results: RawGroup[] = await this.action("group_list", params);
 		const parsedResults: Group[] = this.assertObjectArray(results.map(x => parseGroup(x)), settings.expectedFields);
@@ -319,17 +351,40 @@ export default class CKAN{
 		return results.map(x => parseLicense(x));
 	}
 
+	/** Gets an organization from the API.
+	 * @param {string} id
+	 * @param {SingleGroupOptions?} [settings]
+	 * @returns {Promise<Organization>}
+	 */
+	async organization(id: string, settings?: SingleGroupOptions): Promise<Organization>{
+		if(settings === undefined) settings = {};
+		const params = {
+			id,
+			include_datasets: !!settings.include?.datasets,
+			include_dataset_count: settings.include?.datasetCount ?? true,
+			include_extras: settings.include?.extras ?? true,
+			include_users: !!settings.include?.users,
+			include_groups: settings.include?.subgroups ?? true,
+			include_tags: settings.include?.tags ?? true,
+			include_followers: settings.include?.followers ?? true
+		};
+		const results: RawOrganization = await this.action("organization_show", params);
+		return parseOrganization(results);
+	}
+
 	/** Gets the API's organizations list.
 	 * @param {SortOptions} [settings]
 	 * @returns {Promise<string[]>}
 	 */
 	async organizations(settings?: SortOptions): Promise<string[]>{
-		const results = await this.action("organization_list", settings);
+		const sort = this.convertSortOptions(settings?.sort);
+		const results = await this.action("organization_list", {sort});
 		return this.assertStringArray(results);
 	}
 
 	/** 
 	 * @param {OrganizationOptions} [params={}]
+	 * @returns {Promise<Organization[]>}
 	 */
 	async detailedOrganizations(settings: OrganizationOptions = {}): Promise<Organization[]>{
 		if(!settings.include) settings.include = {};
@@ -340,7 +395,8 @@ export default class CKAN{
 			all_fields: true,
 			include_dataset_count: settings.include.datasetCount,
 			include_extras: settings.include.extras,
-			include_users: settings.include.users
+			include_users: settings.include.users,
+			sort: this.convertSortOptions(settings.sort)
 		};
 		const results: RawOrganization[] = await this.action("organization_list", params);
 		const parsedResults: Organization[] = this.assertObjectArray(results.map(x => parseOrganization(x)), settings.expectedFields);
@@ -399,5 +455,22 @@ export default class CKAN{
 	async detailedUsers(settings: UserOptions = {}): Promise<User[]>{
 		const results: RawUser[] = await this.action("user_list", this.convertUserOptions(settings));
 		return results.map(x => parseUser(x));
+	}
+
+	/** Gets a single vocabulary from the API
+	 * @param {string} id
+	 * @returns {Promise<Vocabulary>}
+	 */
+	async vocabulary(id: string): Promise<Vocabulary>{
+		const results: Vocabulary = await this.action("vocabulary_show", {id});
+		return parseVocabulary(results);
+	}
+
+	/** Gets the API's vocabulary list
+	 * @returns {Promise<Vocabulary[]>}
+	 */
+	async vocabularies(): Promise<Vocabulary[]>{
+		const results: RawVocabulary[] = await this.action("vocabulary_list");
+		return results.map(x => parseVocabulary(x));
 	}
 };

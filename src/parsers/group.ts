@@ -11,7 +11,7 @@ import parseDate from "./date";
 export default function parseGroup(group: RawGroup): Group{
 	const {
 		approval_status, created, dataset_count, description, display_name, extras,
-		groups, id, image_display_url, is_organization, name, num_followers,
+		groups, id, image_display_url, image_url, is_organization, name, num_followers,
 		package_count, state, title, type, users, ...rest
 	} = group;
 	delete rest.image_url;
@@ -21,15 +21,15 @@ export default function parseGroup(group: RawGroup): Group{
 		description: description ?? "",
 		displayName: display_name,
 		id,
-		imageUrl: image_display_url,
+		imageUrl: image_display_url ?? image_url,
 		groups,
 		name: name ?? "",
 		organization: is_organization,
 		state,
 		stats: {
-			datasets: dataset_count,
-			followers: num_followers,
-			packages: package_count
+			// the vocabulary across the api is inconsistent
+			datasets: dataset_count ?? package_count,
+			followers: num_followers
 		},
 		type,
 		title: title ?? "",

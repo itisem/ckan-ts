@@ -41,7 +41,7 @@ export default function parseResource(resource: RawResource): Resource{
 		},
 		modified: parseDate(last_modified),
 		name: name ?? "",
-		package: {
+		dataset: {
 			id: package_id,
 			position
 		},
