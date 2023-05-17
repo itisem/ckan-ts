@@ -12,8 +12,9 @@ import type {
 	Settings, AllowedMethods, GenericResponse,
 	ExpectedFieldsOptions, GroupOptions, LimitOptions, OrganizationOptions, SortOptions, TagOptions, UserOptions,
 	SingleGroupOptions,
-	Group, License, Organization, Package, Resource, Tag, User,
-	RawGroup, RawLicense, RawOrganization, RawPackage, RawResource, RawTag, RawUser,
+	Group, License, Organization, Package, Resource, Tag, User, AutocompletePackage, AutocompleteUser, AutocompleteGroup,
+	RawGroup, RawLicense, RawOrganization, RawPackage, RawResource, RawTag, RawUser, RawAutocompletePackage,
+	RawAutocompleteUser
 } from "./types";
 
 /**
@@ -159,6 +160,75 @@ export default class CKAN{
 		return this.action("site_read");
 	}
 
+	/** Gets the autocomplete list for datasets
+	 * @param {string} query
+	 * @param {number?} limit
+	 * @returns {Promise <AutocompletePackage[]>}
+	 */
+	async autocompleteDataset(query: string, limit?: number): Promise<AutocompletePackage[]>{
+		const expectedFields = ["name", "title", "match"];
+		const results: RawAutocompletePackage[] = await this.action("package_autocomplete", {q: query, limit});
+		const parsedResults: AutocompletePackage[] = this.assertObjectArray(
+			results.map(x => {
+				const {match_field, match_displayed, name, title} = x;
+				return {
+					name,
+					title,
+					match: {
+						field: match_field,
+						displayed: match_displayed
+					}
+				};
+			})
+			, expectedFields
+		);
+		return parsedResults;
+	}
+
+	/** Gets the autocomplete list for formats
+	 * @param {string} query
+	 * @param {number?} limit
+	 * @returns {Promise <string[]>}
+	 */
+	async autocompleteFormat(query: string, limit?: number): Promise<string[]>{
+		const results: string[] = await this.action("format_autocomplete", {q: query, limit});
+		return this.assertStringArray(results);
+	}
+
+	/** Gets the autocomplete list for groups
+	 * @param {string} query
+	 * @param {number?} limit
+	 * @returns {Promise <AutocompleteGroup[]>}
+	 */
+	async autocompleteGroup(query: string, limit?: number): Promise<AutocompleteGroup[]>{
+		const results: AutocompleteGroup[] = await this.action("group_autocomplete", {q: query, limit});
+		return this.assertObjectArray(results, ["id", "name", "title"]) as AutocompleteGroup[];
+	}
+
+	/** Gets the autocomplete list for organizations
+	 * @param {string} query
+	 * @param {number?} limit
+	 * @returns {Promise <AutocompleteGroup[]>}
+	 */
+	async autocompleteOrganization(query: string, limit?: number): Promise<AutocompleteGroup[]>{
+		const results: AutocompleteGroup[] = await this.action("organization_autocomplete", {q: query, limit});
+		return this.assertObjectArray(results, ["id", "name", "title"]) as AutocompleteGroup[];
+	}
+
+	/** Gets the autocomplete list for formats
+	 * @param {string} query
+	 * @param {number?} limit
+	 * @returns {Promise <string[]>}
+	 */
+	async autocompleteUser(query: string, limit?: number): Promise<AutocompleteUser[]>{
+		const results: RawAutocompleteUser[] = await this.action("user_autocomplete", {q: query, limit});
+		const parsedResults = results.map(x => {
+			const {id, name, full_name} = x;
+			return {id, name, fullName: full_name};
+		});
+		return parsedResults;
+	}
+
 	/** Gets the details of a data set from the API.
 	 * @param {string} id
 	 * @returns {Promise<Package>}
@@ -193,19 +263,19 @@ export default class CKAN{
 	/** Gets a group from the API
 	 * @param {string} id
 	 * @param {SingleGroupOptions?} [settings]
+	 * @returns {Promise<Group>}
 	 */
 	async group(id: string, settings: SingleGroupOptions): Promise<Group>{
 		if(settings === undefined) settings = {};
-		if(settings.include === undefined) settings.include = {};
 		const params = {
 			id,
-			include_datasets: !!settings.include.datasets,
-			include_dataset_count: settings.include.datasetCount ?? true,
-			include_extras: settings.include.extras ?? true,
-			include_users: !!settings.include.users,
-			include_groups: settings.include.subgroups ?? true,
-			include_tags: settings.include.tags ?? true,
-			include_followers: settings.include.followers ?? true
+			include_datasets: !!settings.include?.datasets,
+			include_dataset_count: settings.include?.datasetCount ?? true,
+			include_extras: settings.include?.extras ?? true,
+			include_users: !!settings.include?.users,
+			include_groups: settings.include?.subgroups ?? true,
+			include_tags: settings.include?.tags ?? true,
+			include_followers: settings.include?.followers ?? true
 		};
 		const results: RawGroup = await this.action("group_show", params);
 		const parsedResults: Group = parseGroup(results);
@@ -302,6 +372,15 @@ export default class CKAN{
 	async detailedTags(settings?: TagOptions): Promise<Tag[]>{
 		const results: RawTag[] = await this.action("tag_list", {...settings, all_fields: true});
 		return results.map(x => parseTag(x));
+	}
+
+	/** Gets a user from the API.
+	 * @param {string} id
+	 * @returns {Promise<User>}
+	 */
+	async user(id: string): Promise<User>{
+		const results: RawUser = await this.action("user_show", {id});
+		return parseUser(results);
 	}
 
 	/** Gets the API's user list.

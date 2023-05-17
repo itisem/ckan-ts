@@ -75,14 +75,36 @@ export interface Settings{
 
 /////// Parsed output types
 
+/** Autocomplete group result type */
+export interface AutocompleteGroup{
+	id: string;
+	name: string;
+	title: string;
+};
+
+/** Autocomplete package type */
+export interface AutocompletePackage{
+	name: string;
+	title: string;
+	match?: {
+		field?: string;
+		displayed?: string;
+	};
+};
+
+/** Autocomplete user result type */
+export interface AutocompleteUser{
+	id: string;
+	name: string;
+	fullName?: string;
+};
+
 /** Group type */
 export interface Group{
 	/** The group's approval status */
 	approvalStatus?: string;
 	/** When was the group created */
 	created?: Date;
-	/** Package count */
-	datasetCount?: number;
 	/** A long-form description of the group */
 	description: string;
 	/** The group's full, human-readable display name */
@@ -355,6 +377,20 @@ export interface User{
 };
 
 /////// Raw output types
+
+/** Raw autocomplete package type */
+export interface RawAutocompletePackage{
+	match_field?: string;
+	match_displayed?: string;
+	name: string;
+	title: string;
+};
+
+export interface RawAutocompleteUser{
+	id: string;
+	name: string;
+	full_name?: string;
+};
 
 /** Raw extras type */
 export interface RawExtra{

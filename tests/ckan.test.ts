@@ -42,6 +42,39 @@ describe("response assertions", () => {
 
 // endpoint tests
 
+describe("autocomplete endpoints", () => {
+	test("autocomplete package", async () => {
+		const results = await parser.autocompleteDataset("sample");
+		expect(results).toEqual([{
+			name: "sample-dataset-1",
+			title: "Sample Dataset",
+			match: {field: "name", displayed: "sample-dataset-1"}
+		}]);
+	});
+	test("autocomplete group", async () => {
+		const results = await parser.autocompleteGroup("my");
+		expect(results).toEqual([{
+			id: "866b1d34-6414-4f6e-bcda-85e00c44fe42",
+			name: "my-group",
+			title: "My Group"
+		}]);
+	});
+	test("autocomplete format", async () => {
+		expect(await parser.autocompleteFormat("csv")).toEqual(["csv"]);
+	});
+	test("autocomplete organization", async () => {
+		expect(await parser.autocompleteOrganization("sample")).toEqual([{
+			id: "1fa89238-ee96-4439-a885-22d15244d070",
+			name: "sample-organization",
+			title: "Sample Organization"
+		}]);
+	});
+	test("autocomplete user", async() => {
+		const results = await parserItaly.autocompleteUser("admin");
+		expect(results[0]).toMatchObject({id: "b549687d-3768-4e8a-b3a9-f0f94d0b96d9", name: "ckanadmin"});
+	});
+});
+
 describe("dataset-related endpoints", () => {
 	test("basic package lists", async () => {
 		const results = await parser.datasets();
