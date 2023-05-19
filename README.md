@@ -27,7 +27,7 @@ const parser = new CKAN("https://demo.ckan.org/api/3/", {
 
 ## Documentation 
 
-**For full documentation, see here: ...**
+**[Full documentation](https://itisem.github.io/ckan-ts/classes/default.html)**
 
 Currently supported methods:
 
@@ -69,7 +69,7 @@ Currently supported methods:
 
 For more information about these methods, check the [documentation]().
 
-**For full documentation, see here: ...**
+**[Full documentation](https://itisem.github.io/ckan-ts/classes/default.html)**
 
 ## License
 

@@ -10,7 +10,8 @@
     	"isolatedModules": true,
     	"target": "esnext",
     	"rootDir": "src",
-        "outDir": "dist"
+        "outDir": "dist",
+        "declaration": true
 	},
     "exclude": [
         "dist",
