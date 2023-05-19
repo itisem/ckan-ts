@@ -150,7 +150,7 @@ export default class CKAN{
 	 * @param {T} check - the array that needs checking. Should be string[], but mis-implemented APIs can cause an error
 	 * @returns {string[]}
 	 */
-	private assertStringArray<T>(check: T): string[]{
+	assertStringArray<T>(check: T): string[]{
 		if(!Array.isArray(check)) throw new Error(CKAN.malformedApiResponse);
 		if(check.some(x => typeof x !== "string")) throw new Error(CKAN.malformedApiResponse);
 		return check;
@@ -166,7 +166,7 @@ export default class CKAN{
 	 * @param {string[]} [expectedFields]
 	 * @returns {T}
 	 */
-	private assertObjectArray<T>(check: T, expectedFields?: string[]): T{
+	assertObjectArray<T>(check: T, expectedFields?: string[]): T{
 		if(!Array.isArray(check)) throw new Error(CKAN.malformedApiResponse);
 		if(!expectedFields) expectedFields = [];
 		if(check.some(x => {
