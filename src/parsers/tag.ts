@@ -1,4 +1,30 @@
-import type {RawTag, Tag} from "../types";
+import type {StringIndexedObject} from "../types";
+
+/** Tag type */
+export interface Tag{
+	/** The tag's full, human-readable display name */
+	displayName: string;
+	/** The tag's id (usually a UUID) */
+	id: string;
+	/** The tag's short name, often not human-readable */
+	name: string;
+	/** What status is the tag in */
+	state?: string;
+	/** The tag's vocabulary ID */
+	vocabularyId?: string;
+	/** Non-standard additional data provided by the API. */
+	additionalData?: StringIndexedObject;
+};
+
+/** Raw tag type */
+export interface RawTag{
+	display_name?: string;
+	id: string;
+	name?: string;
+	state?: string;
+	vocabulary_id?: string;
+	[key: string]: any;
+};
 
 /** Processes a tag
  * @private

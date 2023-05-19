@@ -1,8 +1,67 @@
-import type {RawGroup, Group} from "../types";
-
-import parseUser from "./user";
-import parseExtras from "./extras";
 import parseDate from "./date";
+import parseExtras from "./extras";
+import parseUser, {User, RawUser} from "./user";
+import type {StringIndexedObject} from "../types";
+
+
+/** Group type */
+export interface Group{
+	/** The group's approval status */
+	approvalStatus?: string;
+	/** When was the group created */
+	created?: Date;
+	/** A long-form description of the group */
+	description: string;
+	/** The group's full, human-readable display name */
+	displayName: string;
+	/** The groups this group belongs to */
+	groups?: string[];
+	/** The group's id (usually a UUID) */
+	id: string;
+	/** The group's display image */
+	imageUrl?: string;
+	/** The group's short name, often not human-readable */
+	name: string;
+	/** Is the group an organization */
+	organization?: boolean;
+	/** The group's state */
+	state?: string;
+	/** The group's numerical statistics */
+	stats: {
+		datasets?: number;
+		followers?: number;
+	};
+	/** The group's full title */
+	title: string;
+	/** The group's type */
+	type?: string;
+	/** The group's members */
+	users?: User[];
+	/** Non-standard additional data provided by the API. */
+	additionalData?: StringIndexedObject;
+};
+
+/** Raw group type */
+export interface RawGroup{
+	approval_status?: string;
+	created?: string;
+	dataset_count?: number;
+	description?: string;
+	display_name: string;
+	groups?: string[];
+	id: string;
+	image_url?: string;
+	is_organization?: boolean;
+	name?: string;
+	num_followers?: number;
+	package_count?: number;
+	revision_id?: string;
+	state?: string;
+	title?: string;
+	users?: RawUser[];
+	image_display_url?: string;
+	[key: string]: any;
+};
 
 /** Parses a group
  * @param {RawGroup} group

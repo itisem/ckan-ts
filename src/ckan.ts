@@ -1,22 +1,20 @@
 import axios, {AxiosResponse} from "axios";
 
-import parseGroup from "./parsers/group";
-import parseLicense from "./parsers/license";
-import parseOrganization from "./parsers/organization";
-import parseDataset from "./parsers/dataset";
-import parseResource from "./parsers/resource";
-import parseTag from "./parsers/tag";
-import parseUser from "./parsers/user";
-import parseVocabulary from "./parsers/vocabulary";
+import parseDataset, {Dataset, RawDataset} from "./parsers/dataset";
+import parseGroup, {Group, RawGroup} from "./parsers/group";
+import parseLicense, {License, RawLicense} from "./parsers/license";
+import parseOrganization, {Organization, RawOrganization} from "./parsers/organization";
+import parseResource, {Resource, RawResource} from "./parsers/resource";
+import parseTag, {Tag, RawTag} from "./parsers/tag";
+import parseUser, {User, RawUser} from "./parsers/user";
+import parseVocabulary, {Vocabulary, RawVocabulary} from "./parsers/vocabulary";
 
 import type {
 	Settings, AllowedMethods, GenericResponse,
 	ExpectedFieldsOptions, GroupOptions, LimitOptions, OrganizationOptions, SortOptions, TagOptions, UserOptions,
-	SingleGroupOptions, BaseSortOptions,
-	Group, License, Organization, Dataset, Resource, Tag, User,
-	Vocabulary, AutocompleteDataset, AutocompleteUser, AutocompleteGroup,
-	RawGroup, RawLicense, RawOrganization, RawDataset, RawResource, RawVocabulary,
-	RawTag, RawUser, RawAutocompleteDataset,
+	SingleGroupOptions, BaseSortOptions, DatasetSearchOptions,
+	AutocompleteDataset, AutocompleteUser, AutocompleteGroup,
+	RawAutocompleteDataset,
 	RawAutocompleteUser
 } from "./types";
 
@@ -87,21 +85,32 @@ export default class CKAN{
 		}
 	}
 
+	/** Converts one sort option to parameters that CKAN can handle
+	 * @private
+	 * @param {BaseSortOptions|string} options
+	 * @returns {string}
+	 */
+	private convertSingleSortOption(options: BaseSortOptions | string): string{
+		const mapping = {
+			datasets: "package_count"
+		};
+		if(typeof options === "string") return options;
+		const optionValue = mapping[options.by] ?? options.by;
+		if(options.order) return `${optionValue} ${options.order}`;
+		return `${optionValue} asc`;
+	}
+
 	/** Converts the sort options to parameters that CKAN can handle
 	 * @private
 	 * @param {BaseSortOptions|string|undefined} options
 	 * @returns {string|undefined}
 	 */
-	private convertSortOptions(options: BaseSortOptions | string | undefined): string | undefined{
-		const mapping = {
-			datasets: "package_count",
-			title: "title",
-			name: "name"
-		};
+	private convertSortOptions(options?: BaseSortOptions | BaseSortOptions[] | string): string | undefined{
 		if(!options) return undefined;
-		if(typeof options === "string") return mapping[options];
-		if(options.order) return mapping[options.by] + " " + options.order;
-		else return mapping[options.by];
+		if(Array.isArray(options)){
+			return options.map(x => this.convertSingleSortOption(x)).join(", ");
+		}
+		return this.convertSingleSortOption(options);
 	}
 
 	/**
@@ -180,7 +189,7 @@ export default class CKAN{
 		return this.action("site_read");
 	}
 
-	/** Gets the autocomplete list for datasets
+	/** Gets the autocomplete list for datasets (packages)
 	 * @param {string} query
 	 * @param {number?} limit
 	 * @returns {Promise <AutocompleteDataset[]>}
@@ -259,6 +268,43 @@ export default class CKAN{
 		return parsedResults;
 	}
 
+	/** Searches for a given dataset (package). Does not handle faceted search.
+	 * @param {string} query - A solr query string
+	 * @param {DatasetSearchOptions} options
+	 * @returns {Promise<Dataset[]>}
+	 */
+	async searchDataset(query: string, options?: DatasetSearchOptions): Promise<Dataset[]>{
+		if(!options) options = {};
+		let params: any = {q: query};
+		// faceted search is not implemented due to its relative lack of usefulness
+		// and the fact that it doesn't play nicely with how all other queries work
+		params.facet = false;
+		if(options.filterQuery) params.fq = options.filterQuery;
+		if(options.limit) params.rows = options.limit;
+		if(options.offset) params.start = options.offset;
+		const results: RawDataset[] = await this.action("package_search", params);
+		const parsedResults: Dataset[] = this.assertObjectArray(
+			results.map(x => parseDataset(x)),
+			["id", "title", "url"]
+		);
+		return parsedResults;
+	}
+
+	/** Searches for a given resource.
+	 * @param {string} query - A solr query string
+	 * @param {SortOptions} options
+	 * @returns {Promise<Resource[]>}
+	 */
+	async searchResource(query: string, options?: SortOptions): Promise<Resource[]>{
+		if(!options) options = {};
+		let params: any = {q: query};
+		params.order_by = this.convertSortOptions(options.sort);
+		params.limit = options.limit;
+		params.offset = options.offset;
+		const results: RawResource[] = await this.action("resource_search", params);
+		return results.map(x => parseResource(x));
+	}
+
 	/** Gets the details of a data set from the API.
 	 * @param {string} id
 	 * @returns {Promise<Dataset>}
@@ -268,7 +314,7 @@ export default class CKAN{
 		return parseDataset(results);
 	}
 
-	/** Gets the API's dataset list.
+	/** Gets the API's dataset (package) list.
 	 * @param {LimitOptions?} [settings]
 	 * @returns {Promise<string[]>}
 	 */
@@ -277,7 +323,7 @@ export default class CKAN{
 		return this.assertStringArray(results);
 	}
 
-	/** Gets the API's dataset list with additional information.
+	/** Gets the API's dataset (package) list with additional information.
 	 * @param {LimitOptions & ExpectedFieldsOptions} [settings]
 	 * @returns {Promise<Dataset[]>}
 	 */

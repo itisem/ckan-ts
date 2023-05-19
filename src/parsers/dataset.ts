@@ -1,12 +1,112 @@
-import type {RawDataset, Dataset} from "../types";
-
 import parseDate from "./date";
 import parseExtras from "./extras";
-import parseGroup from "./group";
+import parseGroup, {Group, RawGroup} from "./group";
 import parseLanguages from "./languages";
-import parseOrganization from "./organization";
-import parseResource from "./resource";
-import parseTag from "./tag";
+import parseOrganization, {Organization, RawOrganization} from "./organization";
+import parseResource, {Resource, RawResource} from "./resource";
+import parseTag, {Tag, RawTag} from "./tag";
+import type {StringIndexedObject, Metadata} from "../types";
+
+/** Processed CKAN dataset type */
+export interface Dataset{
+	/** The dataset's author */
+	author: {
+		name?: string;
+		email?: string;
+	};
+	/** Creator information */
+	creator: {
+		id?: string;
+	};
+	/** Group information */
+	groups: Group[];
+	/** The identification of the dataset */
+	id: string;
+	/** A list of languages the dataset is available in */
+	languages: string[];
+	/** The license under which the resource was released */
+	license: {
+		id?: string;
+		title?: string;
+		url?: string;
+	};
+	/** The dataset's maintainer */
+	maintainer: {
+		name?: string;
+		email?: string;
+	};
+	/** Meta-metadata */
+	metadata: Metadata;
+	/** The dataset's name, often not human-readable. */
+	name: string;
+	/** Information about the publishing organisation */
+	organization?: Organization;
+	/** Resources for the given dataset. */
+	resources: Resource[];
+	/** The object's relationships */
+	relationships: {
+		subject?: any[];
+		object?: any[];
+	};
+	/** The dataset's tags */
+	tags: Tag[];
+	/** The dataset's title, human-readable */
+	title: string;
+	/** The dataset's permanent URL */
+	url: string;
+	/** When the dataset was first issued */
+	created?: Date;
+	/** When the dataset was last modified */
+	modified?: Date;
+	/** Notes the publisher has released about the dataset */
+	notes?: string;
+	/** Is the dataset open */
+	open?: boolean;
+	/** Is the dataset private? */
+	private?: boolean;
+	/** What is the dataset's state */
+	state?: string;
+	/** What type of dataset is it (usually, but not always "dataset") */
+	type?: string;
+	/** The dataset's current version number */
+	version?: string;
+	/** Non-standard additional data provided by the API. */
+	additionalData?: StringIndexedObject;
+};
+
+/** Raw CKAN dataset type for processing */
+export interface RawDataset{
+	id: string;
+	name: string;
+	title: string;
+	url: string;
+	resources: RawResource[];
+	organization: RawOrganization;
+	groups?: RawGroup[];
+	author?: string;
+	author_email?: string;
+	maintainer?: string;
+	maintainer_email?: string;
+	metadata_created?: string;
+	metadata_modified?: string;
+	metadata_language?: string;
+	language?: string | string[];
+	notes?: string;
+	issued?: string;
+	modified?: string;
+	private?: boolean;
+	state?: string;
+	version?: string;
+	num_resources?: number;
+	num_tags?: number;
+	isopen?: boolean;
+	creator_user_id?: string;
+	owner_org?: string;
+	relationships_as_subject?: any[];
+	relationships_as_object?: any[];
+	tags?: RawTag[];
+	[key:string]: any;
+};
 
 /**
  * Processes a dataset into consistent, parsed outputs.

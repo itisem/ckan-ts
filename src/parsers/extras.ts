@@ -1,4 +1,10 @@
-import type {RawExtra, StringIndexedObject} from "../types";
+import type {StringIndexedObject} from "../types";
+
+/** Raw extras type */
+export interface RawExtra{
+	key: string;
+	value: any;
+};
 
 /** Processes a raw extras field into a dictionary
  * @param {RawExtra[]} [extras]
