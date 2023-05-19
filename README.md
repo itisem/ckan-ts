@@ -25,45 +25,51 @@ const parser = new CKAN("https://demo.ckan.org/api/3/", {
 });
 ````
 
+## Documentation 
+
+**For full documentation, see here: ...**
+
 Currently supported methods:
 
 **Search**:
- * `.autocompleteDataset(query, limit)`: searches for a dataset, and returns its autocomplete results. [docs]()
- * `.autocompleteFormat(query, limit)`: searches for a file format, and returns its autocomplete results. [docs]()
- * `.autocompleteGroup(query, limit)`: searches for a group, and returns its autocomplete results. [docs]()
- * `.autocompleteOrganization(query, limit)`: searches for an organization, and returns its autocomplete results. [docs]()
- * `.autocompleteTag(query, limit)`: searches for a tag, and returns its autocomplete results. [docs]()
- * `.autocompleteUser(query, limit)`: searches for a user, and returns its autocomplete results. [docs]()
- * `.searchDataset(query, options)`: searches for a given dataset with additional options, and returns its details. [docs]()
- * `.searchResource(query, options)`: searches for a given resource with additional options, and returns its detaisl. [docs]()
+ * `.autocompleteDataset(query, limit)`: searches for a dataset, and returns its autocomplete results.
+ * `.autocompleteFormat(query, limit)`: searches for a file format, and returns its autocomplete results.
+ * `.autocompleteGroup(query, limit)`: searches for a group, and returns its autocomplete results.
+ * `.autocompleteOrganization(query, limit)`: searches for an organization, and returns its autocomplete results.
+ * `.autocompleteTag(query, limit)`: searches for a tag, and returns its autocomplete results.
+ * `.autocompleteUser(query, limit)`: searches for a user, and returns its autocomplete results
+ * `.searchDataset(query, options)`: searches for a given dataset with additional options, and returns its details.
+ * `.searchResource(query, options)`: searches for a given resource with additional options, and returns its detaisl.
 
 **Lists**:
- * `.datasets(settings?)`: returns the IDs of all datasets on the server. [docs]()
- * `.detailedDatasets(settings?)`: returns information about all datasets on the server, including their included resources. [docs]()
- * `.detailedGroups(settings?)`: returns information about all groups on the server. [docs]()
- * `.detailedOrganizations(settings?)`: returns information about all organizations on the server. [docs]()
- * `.detailedTags(settings?)`: returns information about all tags on the server. [docs]()
- * `.detailedUsers(settings?)`: returns a list of users on the server with detailed information. [docs]()
- * `.groups(settings?)`: returns the IDs of all groups on the server. [docs]()
- * `.licenses()`: returns all the licenses used across datasets. [docs]()
- * `.organizations(settings?)`: returns the IDs of all organizations on the server. [docs]()
- * `.tags(settings?)`: returns the name of all tags on the server. [docs]()
- * `.users(settings?)`: returns a list of user IDs on the server. [docs]()
- * `.vocabularies()`: returns a list of vocabularies on the server. [docs]()
+ * `.datasets(settings?)`: returns the IDs of all datasets on the server.
+ * `.detailedDatasets(settings?)`: returns information about all datasets on the server, including their included resources.
+ * `.detailedGroups(settings?)`: returns information about all groups on the server.
+ * `.detailedOrganizations(settings?)`: returns information about all organizations on the server.
+ * `.detailedTags(settings?)`: returns information about all tags on the server.
+ * `.detailedUsers(settings?)`: returns a list of users on the server with detailed information.
+ * `.groups(settings?)`: returns the IDs of all groups on the server.
+ * `.licenses()`: returns all the licenses used across datasets.
+ * `.organizations(settings?)`: returns the IDs of all organizations on the server.
+ * `.tags(settings?)`: returns the name of all tags on the server.
+ * `.users(settings?)`: returns a list of user IDs on the server.
+ * `.vocabularies()`: returns a list of vocabularies on the server.
 
 **Single items**:
- * `.dataset(id)`: returns the metadata of a dataset with a given ID. [docs]()
- * `.group(id, settings?)`: returns information pertaining to a group. [docs]()
- * `.organization(id, settings?)`: returns information pertaining to an organization. [docs]()
- * `.resource(id)`: returns the metadata of a resource with a given ID. [docs]()
- * `.user(id)`: returns information about a given user. [docs]()
- * `.vocabulary(id)`: returns information about a given vocabulary. [docs]()
+ * `.dataset(id)`: returns the metadata of a dataset with a given ID.
+ * `.group(id, settings?)`: returns information pertaining to a group.
+ * `.organization(id, settings?)`: returns information pertaining to an organization.
+ * `.resource(id)`: returns the metadata of a resource with a given ID.
+ * `.user(id)`: returns information about a given user.
+ * `.vocabulary(id)`: returns information about a given vocabulary.
 
 **Miscellaneous**:
- * `.action(action, data?, method?)`: carries out a generic action. Used in case it has not been implemented in the CKAN-TS yet. [docs]()
- * `.available()`: checks whether an API endpoint is currently available. [docs]()
+ * `.action(action, data?, method?)`: carries out a generic action. Used in case it has not been implemented in the CKAN-TS yet.
+ * `.available()`: checks whether an API endpoint is currently available.
 
 For more information about these methods, check the [documentation]().
+
+**For full documentation, see here: ...**
 
 ## License
 
