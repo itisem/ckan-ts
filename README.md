@@ -34,6 +34,8 @@ Currently supported methods:
  * `.autocompleteOrganization(query, limit)`: searches for an organization, and returns its autocomplete results. [docs]()
  * `.autocompleteTag(query, limit)`: searches for a tag, and returns its autocomplete results. [docs]()
  * `.autocompleteUser(query, limit)`: searches for a user, and returns its autocomplete results. [docs]()
+ * `.searchDataset(query, options)`: searches for a given dataset with additional options, and returns its details. [docs]()
+ * `.searchResource(query, options)`: searches for a given resource with additional options, and returns its detaisl. [docs]()
 
 **Lists**:
  * `.datasets(settings?)`: returns the IDs of all datasets on the server. [docs]()
