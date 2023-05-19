@@ -1,5 +1,7 @@
-import axios, {AxiosResponse} from "axios";
+import axios, {AxiosResponse, AxiosRequestConfig} from "axios";
 
+import parseAutocompleteDataset, {AutocompleteDataset, RawAutocompleteDataset} from "./parsers/autocomplete-dataset";
+import parseAutocompleteUser, {AutocompleteUser, RawAutocompleteUser} from "./parsers/autocomplete-user";
 import parseDataset, {Dataset, RawDataset} from "./parsers/dataset";
 import parseGroup, {Group, RawGroup} from "./parsers/group";
 import parseLicense, {License, RawLicense} from "./parsers/license";
@@ -10,13 +12,39 @@ import parseUser, {User, RawUser} from "./parsers/user";
 import parseVocabulary, {Vocabulary, RawVocabulary} from "./parsers/vocabulary";
 
 import type {
-	Settings, AllowedMethods, GenericResponse,
-	ExpectedFieldsOptions, GroupOptions, LimitOptions, OrganizationOptions, SortOptions, TagOptions, UserOptions,
+	AllowedMethods, GroupOptions, LimitOptions, SortOptions, TagOptions, UserOptions,
 	SingleGroupOptions, BaseSortOptions, DatasetSearchOptions,
-	AutocompleteDataset, AutocompleteUser, AutocompleteGroup,
-	RawAutocompleteDataset,
-	RawAutocompleteUser
 } from "./types";
+
+/** Settings for the CKAN module */
+export interface Settings{
+	/** Request options to pass along to got. For more info, see the documentation: https://axios-http.com/docs/req_config */
+	requestOptions?: AxiosRequestConfig;
+	/** Ignore automatic API URL correction. Used for endpoints which don't follow the standard endpoint format. */
+	skipEndpointCorrection?: boolean
+};
+
+
+// response types
+/** Autocomplete group result type */
+export interface AutocompleteGroup{
+	id: string;
+	name: string;
+	title: string;
+};
+
+// miscellaneous helper types
+
+/** Generic CKAN response type */
+interface GenericResponse<T>{
+	help: string;
+	success: boolean;
+	result?: T;
+	error?: {
+		__type: string;
+		message: string;
+	};
+};
 
 /**
  * Implements the CKAN action API as per the latest documentation: https://docs.ckan.org/en/2.10/api/
@@ -198,18 +226,8 @@ export default class CKAN{
 		const expectedFields = ["name", "title", "match"];
 		const results: RawAutocompleteDataset[] = await this.action("package_autocomplete", {q: query, limit});
 		const parsedResults: AutocompleteDataset[] = this.assertObjectArray(
-			results.map(x => {
-				const {match_field, match_displayed, name, title} = x;
-				return {
-					name,
-					title,
-					match: {
-						field: match_field,
-						displayed: match_displayed
-					}
-				};
-			})
-			, expectedFields
+			results.map(x => parseAutocompleteDataset(x)),
+			expectedFields
 		);
 		return parsedResults;
 	}
@@ -261,11 +279,7 @@ export default class CKAN{
 	 */
 	async autocompleteUser(query: string, limit?: number): Promise<AutocompleteUser[]>{
 		const results: RawAutocompleteUser[] = await this.action("user_autocomplete", {q: query, limit});
-		const parsedResults = results.map(x => {
-			const {id, name, full_name} = x;
-			return {id, name, fullName: full_name};
-		});
-		return parsedResults;
+		return results.map(x => parseAutocompleteUser(x));
 	}
 
 	/** Searches for a given dataset (package). Does not handle faceted search.
@@ -324,14 +338,13 @@ export default class CKAN{
 	}
 
 	/** Gets the API's dataset (package) list with additional information.
-	 * @param {LimitOptions & ExpectedFieldsOptions} [settings]
+	 * @param {LimitOptions} [settings]
 	 * @returns {Promise<Dataset[]>}
 	 */
-	async detailedDatasets(settings?: LimitOptions & ExpectedFieldsOptions): Promise<Dataset[]>{
+	async detailedDatasets(settings?: LimitOptions): Promise<Dataset[]>{
 		if(settings === undefined) settings = {};
-		if(settings.expectedFields === undefined) settings.expectedFields = ["id", "title", "url"];
-		let {expectedFields, ...params} = settings;
-		const results: RawDataset[] = await this.action("current_package_list_with_resources", params);
+		const expectedFields = ["id", "title", "url"];
+		const results: RawDataset[] = await this.action("current_package_list_with_resources", settings);
 		const parsedResults: Dataset[] = this.assertObjectArray(results.map(x => parseDataset(x)), expectedFields);
 		return parsedResults;
 	}
@@ -374,7 +387,7 @@ export default class CKAN{
 	 */
 	async detailedGroups(settings: GroupOptions = {}): Promise<Group[]>{
 		if(!settings.include) settings.include = {};
-		if(!settings.expectedFields) settings.expectedFields = ["id", "displayName"];
+		const expectedFields = ["id", "displayName"];
 		const params = {
 			limit: settings.limit,
 			offset: settings.offset,
@@ -385,7 +398,7 @@ export default class CKAN{
 			sort: this.convertSortOptions(settings.sort)
 		};
 		const results: RawGroup[] = await this.action("group_list", params);
-		const parsedResults: Group[] = this.assertObjectArray(results.map(x => parseGroup(x)), settings.expectedFields);
+		const parsedResults: Group[] = this.assertObjectArray(results.map(x => parseGroup(x)), expectedFields);
 		return parsedResults;
 	}
 
@@ -432,9 +445,9 @@ export default class CKAN{
 	 * @param {OrganizationOptions} [params={}]
 	 * @returns {Promise<Organization[]>}
 	 */
-	async detailedOrganizations(settings: OrganizationOptions = {}): Promise<Organization[]>{
+	async detailedOrganizations(settings: GroupOptions = {}): Promise<Organization[]>{
 		if(!settings.include) settings.include = {};
-		if(!settings.expectedFields) settings.expectedFields = ["id", "displayName"];
+		const expectedFields = ["id", "displayName"];
 		const params = {
 			limit: settings.limit,
 			offset: settings.offset,
@@ -445,7 +458,7 @@ export default class CKAN{
 			sort: this.convertSortOptions(settings.sort)
 		};
 		const results: RawOrganization[] = await this.action("organization_list", params);
-		const parsedResults: Organization[] = this.assertObjectArray(results.map(x => parseOrganization(x)), settings.expectedFields);
+		const parsedResults: Organization[] = this.assertObjectArray(results.map(x => parseOrganization(x)), expectedFields);
 		return parsedResults;
 	}
 
