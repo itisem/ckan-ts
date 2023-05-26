@@ -307,7 +307,7 @@ export default class CKAN{
 		const results: RawSearchResult<RawDataset[]> = await this.action("package_search", params);
 		const parsedResults: Dataset[] = this.assertObjectArray(
 			results.results.map(x => parseDataset(x)),
-			["id", "title", "url"]
+			["id", "title"]
 		);
 		return parsedResults;
 	}
