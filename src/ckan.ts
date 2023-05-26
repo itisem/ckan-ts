@@ -1,20 +1,20 @@
 import axios, {AxiosResponse, AxiosRequestConfig} from "axios";
 
-import parseAutocompleteDataset, {AutocompleteDataset, RawAutocompleteDataset} from "./parsers/autocomplete-dataset";
-import parseAutocompleteUser, {AutocompleteUser, RawAutocompleteUser} from "./parsers/autocomplete-user";
-import parseDataset, {Dataset, RawDataset} from "./parsers/dataset";
-import parseGroup, {Group, RawGroup} from "./parsers/group";
-import parseLicense, {License, RawLicense} from "./parsers/license";
-import parseOrganization, {Organization, RawOrganization} from "./parsers/organization";
-import parseResource, {Resource, RawResource} from "./parsers/resource";
-import parseTag, {Tag, RawTag} from "./parsers/tag";
-import parseUser, {User, RawUser} from "./parsers/user";
-import parseVocabulary, {Vocabulary, RawVocabulary} from "./parsers/vocabulary";
+import parseAutocompleteDataset, {AutocompleteDataset, RawAutocompleteDataset} from "./parsers/autocomplete-dataset.js";
+import parseAutocompleteUser, {AutocompleteUser, RawAutocompleteUser} from "./parsers/autocomplete-user.js";
+import parseDataset, {Dataset, RawDataset} from "./parsers/dataset.js";
+import parseGroup, {Group, RawGroup} from "./parsers/group.js";
+import parseLicense, {License, RawLicense} from "./parsers/license.js";
+import parseOrganization, {Organization, RawOrganization} from "./parsers/organization.js";
+import parseResource, {Resource, RawResource} from "./parsers/resource.js";
+import parseTag, {Tag, RawTag} from "./parsers/tag.js";
+import parseUser, {User, RawUser} from "./parsers/user.js";
+import parseVocabulary, {Vocabulary, RawVocabulary} from "./parsers/vocabulary.js";
 
 import type {
 	AllowedMethods, GroupOptions, LimitOptions, SortOptions, TagOptions, UserOptions,
 	SingleGroupOptions, BaseSortOptions, DatasetSearchOptions,
-} from "./types";
+} from "./types.js";
 
 /** Settings for the CKAN module */
 export interface Settings{
@@ -44,6 +44,14 @@ interface GenericResponse<T>{
 		__type: string;
 		message: string;
 	};
+};
+
+interface RawSearchResult<T>{
+	results: T;
+	count: number;
+	sort: string;
+	facets: any;
+	search_facets: any;
 };
 
 /**
@@ -296,9 +304,9 @@ export default class CKAN{
 		if(options.filterQuery) params.fq = options.filterQuery;
 		if(options.limit) params.rows = options.limit;
 		if(options.offset) params.start = options.offset;
-		const results: RawDataset[] = await this.action("package_search", params);
+		const results: RawSearchResult<RawDataset[]> = await this.action("package_search", params);
 		const parsedResults: Dataset[] = this.assertObjectArray(
-			results.map(x => parseDataset(x)),
+			results.results.map(x => parseDataset(x)),
 			["id", "title", "url"]
 		);
 		return parsedResults;
@@ -315,8 +323,8 @@ export default class CKAN{
 		params.order_by = this.convertSortOptions(options.sort);
 		params.limit = options.limit;
 		params.offset = options.offset;
-		const results: RawResource[] = await this.action("resource_search", params);
-		return results.map(x => parseResource(x));
+		const results: RawSearchResult<RawResource[]> = await this.action("resource_search", params);
+		return results.results.map(x => parseResource(x));
 	}
 
 	/** Gets the details of a data set from the API.

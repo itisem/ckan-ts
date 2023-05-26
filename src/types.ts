@@ -60,15 +60,6 @@ export interface SortOptions extends LimitOptions{
 	sort?: BaseSortOptions | BaseSortOptions[] | string;
 };
 
-/** Organization inclusion settings */
-export interface OrganizationOptions extends SortOptions{
-	include?: {
-		datasetCount?: boolean;
-		extras?: boolean;
-		users?: boolean;
-	}
-};
-
 /** User settings */
 export interface UserOptions{
 	search?: string;

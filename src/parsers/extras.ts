@@ -1,4 +1,4 @@
-import type {StringIndexedObject} from "../types";
+import type {StringIndexedObject} from "../types.js";
 
 /** Raw extras type */
 export interface RawExtra{

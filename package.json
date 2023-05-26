@@ -1,6 +1,6 @@
 {
 	"name": "ckan-ts",
-	"version": "1.0.0",
+	"version": "1.0.2",
 	"description": "A fully tested TypeScript wrapper for CKAN API endpoints, designed to provide coherent vocabulary & outputs, regardless of implementation",
 	"author": "Emily Nagy",
 	"license": "MIT",
@@ -19,5 +19,6 @@
 		"test": "jest"
 	},
 	"main": "dist/index.js",
-	"types": "dist/index.d.ts"
+	"types": "dist/index.d.ts",
+	"type": "module"
 }

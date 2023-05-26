@@ -11,7 +11,11 @@
     	"target": "esnext",
     	"rootDir": "src",
         "outDir": "dist",
-        "declaration": true
+        "declaration": true,
+        "baseUrl": "./src",
+        "paths": {
+            "parsers/*": ["parsers/*"],
+        }
 	},
     "exclude": [
         "dist",

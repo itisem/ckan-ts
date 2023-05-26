@@ -1,6 +1,6 @@
-import parseDate from "./date";
+import parseDate from "./date.js";
 
-import type {StringIndexedObject} from "../types";
+import type {StringIndexedObject} from "../types.js";
 
 /** User type */
 export interface User{

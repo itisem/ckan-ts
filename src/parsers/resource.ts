@@ -1,6 +1,6 @@
-import parseDate from "./date";
-import parseLanguages from "./languages";
-import type {StringIndexedObject, Metadata} from "../types";
+import parseDate from "./date.js";
+import parseLanguages from "./languages.js";
+import type {StringIndexedObject, Metadata} from "../types.js";
 
 /** Processed resource type */
 export interface Resource{

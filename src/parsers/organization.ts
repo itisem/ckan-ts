@@ -1,7 +1,7 @@
-import parseDate from "./date";
-import parseExtras from "./extras";
-import parseUser, {User, RawUser} from "./user";
-import type {StringIndexedObject} from "../types";
+import parseDate from "./date.js";
+import parseExtras from "./extras.js";
+import parseUser, {User, RawUser} from "./user.js";
+import type {StringIndexedObject} from "../types.js";
 
 /** Organization CKAN type */
 export interface Organization{
