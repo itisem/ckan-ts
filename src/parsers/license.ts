@@ -1,4 +1,4 @@
-import type {StringIndexedObject} from "../types.js";
+import type {StringIndexedObject} from "@/types";
 
 /** License type */
 export interface License{

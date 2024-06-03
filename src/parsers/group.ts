@@ -1,7 +1,7 @@
-import parseDate from "./date.js";
-import parseExtras from "./extras.js";
-import parseUser, {User, RawUser} from "./user.js";
-import type {StringIndexedObject} from "../types.js";
+import parseDate from "@/parsers/date";
+import parseExtras from "@/parsers/extras";
+import parseUser, {User, RawUser} from "@/parsers/user";
+import type {StringIndexedObject} from "@/types";
 
 
 /** Group type */
