@@ -1,20 +1,20 @@
 import axios, {AxiosResponse, AxiosRequestConfig} from "axios";
 
-import parseAutocompleteDataset, {AutocompleteDataset, RawAutocompleteDataset} from "./parsers/autocomplete-dataset.js";
-import parseAutocompleteUser, {AutocompleteUser, RawAutocompleteUser} from "./parsers/autocomplete-user.js";
-import parseDataset, {Dataset, RawDataset} from "./parsers/dataset.js";
-import parseGroup, {Group, RawGroup} from "./parsers/group.js";
-import parseLicense, {License, RawLicense} from "./parsers/license.js";
-import parseOrganization, {Organization, RawOrganization} from "./parsers/organization.js";
-import parseResource, {Resource, RawResource} from "./parsers/resource.js";
-import parseTag, {Tag, RawTag} from "./parsers/tag.js";
-import parseUser, {User, RawUser} from "./parsers/user.js";
-import parseVocabulary, {Vocabulary, RawVocabulary} from "./parsers/vocabulary.js";
+import parseAutocompleteDataset, {AutocompleteDataset, RawAutocompleteDataset} from "@/parsers/autocomplete-dataset";
+import parseAutocompleteUser, {AutocompleteUser, RawAutocompleteUser} from "@/parsers/autocomplete-user";
+import parseDataset, {Dataset, RawDataset} from "@/parsers/dataset";
+import parseGroup, {Group, RawGroup} from "@/parsers/group";
+import parseLicense, {License, RawLicense} from "@/parsers/license";
+import parseOrganization, {Organization, RawOrganization} from "@/parsers/organization";
+import parseResource, {Resource, RawResource} from "@/parsers/resource";
+import parseTag, {Tag, RawTag} from "@/parsers/tag";
+import parseUser, {User, RawUser} from "@/parsers/user";
+import parseVocabulary, {Vocabulary, RawVocabulary} from "@/parsers/vocabulary";
 
 import type {
 	AllowedMethods, GroupOptions, LimitOptions, SortOptions, TagOptions, UserOptions,
 	SingleGroupOptions, BaseSortOptions, DatasetSearchOptions,
-} from "./types.js";
+} from "./types";
 
 /** Settings for the CKAN module */
 export interface Settings{
@@ -74,6 +74,16 @@ export default class CKAN{
 	constructor(baseUrl: string, options: Settings = {}){
 		// standardise the url for our purposes: replace ending slashes and add /api/3/action at the end
 		this.options = options;
+		// add a default paramsSerializer if none is provided to prevent axios from encoding characters
+		if (!this.options.requestOptions || !this.options.requestOptions?.paramsSerializer) {
+			this.options.requestOptions = {
+				paramsSerializer : {
+					encode: (string) => {
+						return string
+					}
+				}
+			}
+		}
 		this.setBaseUrl(baseUrl);
 	}
 
@@ -199,22 +209,28 @@ export default class CKAN{
 	async action<T, U>(action: string, data?: T, method: AllowedMethods = "GET"): Promise<U>{
 		let result: AxiosResponse;
 		let finalUrl = this._baseUrl + action;
-		switch(method){
-			case "GET":
-				result = await axios.get(
-					finalUrl,
-					{...this.options.requestOptions, params: data}
-				);
-				break;
-			case "POST":
-				result = await axios.post(finalUrl, data, this.options.requestOptions);
-				break;
+		try {
+			switch(method){
+				case "GET":
+					result = await axios.get(
+						finalUrl,
+						{...this.options.requestOptions, params: data}
+					);
+					break;
+				case "POST":
+					result = await axios.post(finalUrl, data, this.options.requestOptions);
+					break;
+			}
+			const responseData: GenericResponse<U> = result.data;
+			if(!responseData.success){
+				throw new Error(responseData.error?.message ?? "Unknown API error");
+			}
+			return responseData.result;
+		} catch (error) {
+			if(error.response){
+				throw new Error("Unknown API error: " + error.response);
+			}
 		}
-		const responseData: GenericResponse<U> = result.data;
-		if(!responseData.success){
-			throw new Error(responseData.error?.message ?? "Unknown API error");
-		}
-		return responseData.result;
 	}
 
 	/**
@@ -295,13 +311,21 @@ export default class CKAN{
 	 * @param {DatasetSearchOptions} options
 	 * @returns {Promise<Dataset[]>}
 	 */
-	async searchDataset(query: string, options?: DatasetSearchOptions): Promise<Dataset[]>{
+	async searchDataset(query: string, options?: DatasetSearchOptions, raw: boolean = false): Promise<Dataset[]>{
+		const result = await this.searchDatasetRawResult(query, options);
+		return result.results
+	}
+
+	async searchDatasetRawResult(query: string, options?: DatasetSearchOptions): Promise<RawSearchResult<Dataset[]>>{
 		if(!options) options = {};
 		let params: any = {q: query};
 		// faceted search is not implemented due to its relative lack of usefulness
 		// and the fact that it doesn't play nicely with how all other queries work
 		params.facet = false;
-		if(options.filterQuery) params.fq = options.filterQuery;
+		if(options.filterQuery) {
+			if (Array.isArray(options.filterQuery)) params.fq = options.filterQuery.join("+");
+			else params.fq = options.filterQuery;
+		}
 		if(options.limit) params.rows = options.limit;
 		if(options.offset) params.start = options.offset;
 		const results: RawSearchResult<RawDataset[]> = await this.action("package_search", params);
@@ -309,8 +333,15 @@ export default class CKAN{
 			results.results.map(x => parseDataset(x)),
 			["id", "title"]
 		);
-		return parsedResults;
+		return {
+			results: parsedResults,
+			count: results.count,
+			sort: results.sort,
+			facets: results.facets,
+			search_facets: results.search_facets
+		}
 	}
+
 
 	/** Searches for a given resource.
 	 * @param {string} query - A solr query string

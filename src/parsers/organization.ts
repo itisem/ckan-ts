@@ -1,7 +1,7 @@
-import parseDate from "./date.js";
-import parseExtras from "./extras.js";
-import parseUser, {User, RawUser} from "./user.js";
-import type {StringIndexedObject} from "../types.js";
+import parseDate from "@/parsers/date";
+import parseExtras from "@/parsers/extras";
+import parseUser, {User, RawUser} from "@/parsers/user";
+import type {StringIndexedObject} from "@/types";
 
 /** Organization CKAN type */
 export interface Organization{
@@ -64,30 +64,34 @@ export interface RawOrganization{
  * @param {RawOrganization} [organization]
  * @returns {Organization}
  */
-export default function parseOrganization(organization: RawOrganization): Organization{
-	const {
-		approval_status, created, dataset_count, description, display_name, extras, id, image_display_url, image_url,
-		is_organization, name, num_followers, package_count, state, title, type, users,
-		...rest
-	} = organization;
-	return {
-		approvalStatus: approval_status,
-		created: parseDate(created),
-		description: description ?? "",
-		displayName: display_name,
-		id,
-		imageUrl: image_display_url ?? image_url,
-		isOrganization: is_organization ?? true,
-		name: name ?? "",
-		state,
-		stats: {
-			// the vocabulary across the api is inconsistent
-			datasets: dataset_count ?? package_count,
-			followers: num_followers,
-		},
-		title: title ?? "",
-		type,
-		users: users ? users.map(x => parseUser(x)) : [],
-		additionalData: {...rest, ...parseExtras(extras)}
-	};
+export default function parseOrganization(organization?: RawOrganization): Organization{
+	if (organization) {
+		const {
+			approval_status, created, dataset_count, description, display_name, extras, id, image_display_url, image_url,
+			is_organization, name, num_followers, package_count, state, title, type, users,
+			...rest
+		} = organization;
+		return {
+			approvalStatus: approval_status,
+			created: parseDate(created),
+			description: description ?? "",
+			displayName: display_name,
+			id,
+			imageUrl: image_display_url ?? image_url,
+			isOrganization: is_organization ?? true,
+			name: name ?? "",
+			state,
+			stats: {
+				// the vocabulary across the api is inconsistent
+				datasets: dataset_count ?? package_count,
+				followers: num_followers,
+			},
+			title: title ?? "",
+			type,
+			users: users ? users.map(x => parseUser(x)) : [],
+			additionalData: {...rest, ...parseExtras(extras)}
+		};
+	} else {
+		return undefined;
+	}
 }

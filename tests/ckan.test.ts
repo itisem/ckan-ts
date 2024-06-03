@@ -47,16 +47,16 @@ describe("autocomplete endpoints", () => {
 		const results = await parser.autocompleteDataset("sample");
 		expect(results).toEqual([{
 			name: "sample-dataset-1",
-			title: "Sample Dataset",
+			title: "Sample dataset 1",
 			match: {field: "name", displayed: "sample-dataset-1"}
 		}]);
 	});
 	test("autocomplete group", async () => {
-		const results = await parser.autocompleteGroup("my");
+		const results = await parser.autocompleteGroup("da");
 		expect(results).toEqual([{
-			id: "866b1d34-6414-4f6e-bcda-85e00c44fe42",
-			name: "my-group",
-			title: "My Group"
+			id: "ded220b4-c665-4312-95d0-8c3ec969441f",
+			name: "david",
+			title: "Dave's books"
 		}]);
 	});
 	test("autocomplete format", async () => {
@@ -66,15 +66,15 @@ describe("autocomplete endpoints", () => {
 		expect(await parser.autocompleteFormat("geo")).toEqual(["geojson"]);
 	});
 	test("autocomplete organization", async () => {
-		expect(await parser.autocompleteOrganization("sample")).toEqual([{
-			id: "1fa89238-ee96-4439-a885-22d15244d070",
-			name: "sample-organization",
-			title: "Sample Organization"
+		expect(await parserItaly.autocompleteOrganization("isp")).toEqual([{
+			id: "ac8db934-572c-4e68-b00c-2fc3d8a29050",
+			name: "ispra",
+			title: "ISPRA"
 		}]);
-	});
+	}, 10000);
 	test("autocomplete user", async() => {
 		const results = await parserItaly.autocompleteUser("admin");
-		expect(results[0]).toMatchObject({id: "b549687d-3768-4e8a-b3a9-f0f94d0b96d9", name: "ckanadmin"});
+		expect(results[0]).toMatchObject({id: "ab485f90-2f37-4a9b-8fb6-5296cf486d33", name: "ckan_admin"});
 	});
 });
 
@@ -82,25 +82,29 @@ describe("dataset-related endpoints", () => {
 	test("basic package lists", async () => {
 		const results = await parser.datasets();
 		expect(results.every(x => typeof x === "string")).toBe(true);
-		expect(results).toEqual(["sample-dataset-1"]);
+		expect(results).toEqual([
+			'annakarenina',
+			'sample-dataset-1',
+			'warandpeace'
+		]);
 	});
 	test("detailed package lists", async () => {
 		const results = await parser.detailedDatasets();
 		expect(results.some(x => typeof x === "string")).toBe(false);
-		expect(results.length).toBe(1);
+		expect(results.length).toBe(3);
 		expect(results[0]).toMatchObject({
 			author: {
-				name: "Test Author",
-				email: "test@email.com"
+				name: "",
+				email: ""
 			},
 			license: {
-				id: "cc-by",
-				title: "Creative Commons Attribution",
-				url: "http://www.opendefinition.org/licenses/cc-by"
+				id: "ODC-PDDL-1.0",
+				title: "Open Data Commons Public Domain Dedication and Licence 1.0",
+				url: "http://www.opendefinition.org/licenses/odc-pddl"
 			},
 			metadata: {
-				created: new Date("2021-04-09T11:39:37.657233"),
-				modified: new Date("2022-05-20T09:20:43.998956")
+				created: new Date("2024-02-27T14:15:54.573058"),
+				modified: new Date("2024-05-16T07:58:26.405378")
 			},
 			name: "sample-dataset-1"
 		});
@@ -111,7 +115,7 @@ describe("group-related endpoints", () => {
 	test("can basic groups", async () => {
 		const results = await parser.groups();
 		expect(results.every(x => typeof x === "string")).toBe(true);
-		expect(results).toEqual(["my-group", "test-group"]);
+		expect(results).toEqual(["david", "roger"]);
 	});
 	test("can get detailed groups without additional information", async () => {
 		const results = await parser.detailedGroups();
@@ -154,9 +158,9 @@ describe("meta-api endpoints", () => {
 
 describe("organization-related endpoints", () => {
 	test("basic organization lists", async () => {
-		const results = await parser.organizations();
+		const results = await parserItaly.organizations();
 		expect(results.every(x => typeof x === "string")).toBe(true);
-		expect(results).toEqual(["city-of-london", "sample-organization", "test_organization"]);
+		expect(results).toContain("agenzia-per-l-italia-digitale");
 	});
 	test("full organization lists", async () => {
 		const results = await parser.detailedOrganizations();
@@ -165,8 +169,8 @@ describe("organization-related endpoints", () => {
 		// once again, the correct handling of such data is therefore left to the parser tests
 	});
 	test("single organization", async() => {
-		const results = await parser.organization("sample-organization");
-		expect(results.title).toBe("Sample Organization");
+		const results = await parserItaly.organization("ispra");
+		expect(results.title).toBe("ISPRA");
 	});
 });
 
@@ -174,7 +178,11 @@ describe("tag-related endpoints", () => {
 	test("basic tag lists", async () => {
 		const results = await parser.tags();
 		expect(results.every(x => typeof x === "string")).toBe(true);
-		expect(results).toEqual(["csv", "economy", "geojson", "kml", "pdf", "sample", "txt", "wms"]);
+		expect(results).toEqual([
+			'Flexible ァ',
+			'russian',
+			'tolstoy'
+		]);
 	});
 	test("detailed tag lists", async () => {
 		const results = await parser.detailedTags();
@@ -196,8 +204,8 @@ describe("vocabulary-related endpoints", () => {
 		expect(results.some(x => typeof x === "string")).toBe(false);
 	});
 	test("can get vocabulary", async () => {
-		const results = await parserItaly.vocabulary("ae537949-d633-46c0-b41b-c9580aacd178");
-		expect(results.id).toBe("ae537949-d633-46c0-b41b-c9580aacd178");
+		const results = await parserItaly.vocabulary("a1908578-5f0b-451c-8b80-9e98f95feb25");
+		expect(results.id).toBe("a1908578-5f0b-451c-8b80-9e98f95feb25");
 		expect(results.name).toBe("languages");
 		const tags = results.tags.map(x => x.name);
 		expect(tags.includes("ITA")).toBe(true);
@@ -208,5 +216,22 @@ describe("malformed responses", () => {
 	// the italian endpoint has a faulty implementation for all_fields=false, meaning that it will never be an array of strings
 	test("errors on malformed response", () => {
 		expect(parserItaly.users()).rejects.toThrow();
+	}, 20000);
+});
+
+describe("search-related endpoints", () => {
+	test("can search datasets with query", async () => {
+		const results = await parser.searchDataset("sample");
+		expect(results.length).toBe(1);
+		expect(results[0].name).toBe("sample-dataset-1");
+	}, 20000);
+	test("can search datasets with filterQuery", async () => {
+		const results = await parser.searchDataset("", {filterQuery: ["groups:david", "tags:tolstoy"]});
+		expect(results.length).toBe(1);
+		expect(results[0].name).toBe("annakarenina");
+	}, 20000);
+	test("can search using the raw result response", async () => {
+		const response = await parser.searchDatasetRawResult("sample");
+		expect(response.count).toBe(1);
 	}, 20000);
 });

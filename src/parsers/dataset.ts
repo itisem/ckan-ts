@@ -1,11 +1,11 @@
-import parseDate from "./date.js";
-import parseExtras from "./extras.js";
-import parseGroup, {Group, RawGroup} from "./group.js";
-import parseLanguages from "./languages.js";
-import parseOrganization, {Organization, RawOrganization} from "./organization.js";
-import parseResource, {Resource, RawResource} from "./resource.js";
-import parseTag, {Tag, RawTag} from "./tag.js";
-import type {StringIndexedObject, Metadata} from "../types.js";
+import parseDate from "@/parsers/date";
+import parseExtras from "@/parsers/extras";
+import parseGroup, {Group, RawGroup} from "@/parsers/group";
+import parseLanguages from "@/parsers/languages";
+import parseOrganization, {Organization, RawOrganization} from "@/parsers/organization";
+import parseResource, {Resource, RawResource} from "@/parsers/resource";
+import parseTag, {Tag, RawTag} from "@/parsers/tag";
+import type {StringIndexedObject, Metadata} from "@/types";
 
 /** Processed CKAN dataset type */
 export interface Dataset{

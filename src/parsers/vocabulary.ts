@@ -1,5 +1,5 @@
-import parseTag, {Tag, RawTag} from "./tag.js";
-import type {StringIndexedObject} from "../types.js";
+import parseTag, {Tag, RawTag} from "@/parsers/tag";
+import type {StringIndexedObject} from "@/types";
 
 /** Vocabulary type */
 export interface Vocabulary{
