@@ -15,6 +15,7 @@ import type {
 	AllowedMethods, GroupOptions, LimitOptions, SortOptions, TagOptions, UserOptions,
 	SingleGroupOptions, BaseSortOptions, DatasetSearchOptions,
 } from "./types";
+import { RawSearchResult } from "@/parsers/search";
 
 /** Settings for the CKAN module */
 export interface Settings{
@@ -44,14 +45,6 @@ interface GenericResponse<T>{
 		__type: string;
 		message: string;
 	};
-};
-
-interface RawSearchResult<T>{
-	results: T;
-	count: number;
-	sort: string;
-	facets: any;
-	search_facets: any;
 };
 
 /**

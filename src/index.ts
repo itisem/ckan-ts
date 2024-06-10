@@ -15,6 +15,7 @@ export type {Resource} from "@/parsers/resource";
 export type {Tag} from "@/parsers/tag";
 export type {User} from "@/parsers/user";
 export type {Vocabulary} from "@/parsers/vocabulary";
+export type {RawSearchResult} from "@/parsers/search";
 
 // exporting options types
 export type {Settings} from "@/ckan";
