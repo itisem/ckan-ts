@@ -39,6 +39,7 @@ Currently supported methods:
  * `.autocompleteTag(query, limit)`: searches for a tag, and returns its autocomplete results.
  * `.autocompleteUser(query, limit)`: searches for a user, and returns its autocomplete results
  * `.searchDataset(query, options)`: searches for a given dataset with additional options, and returns its details.
+ * `.searchDatasetRawResult(query, options)`: searches for a given dataset with additional options, and returns the CKAN search output (including `count`).
  * `.searchResource(query, options)`: searches for a given resource with additional options, and returns its detaisl.
 
 **Lists**:
